@@ -1,5 +1,6 @@
 # Python artifacts:
 *.pyc
+*.pyo
 
 # Eclipse IDE:
 .project
@@ -18,5 +19,6 @@ screenshots/
 backups/
 contentpacks/
 toondata/
+resources/
 panel_save.mp
 ai-crash.txt
