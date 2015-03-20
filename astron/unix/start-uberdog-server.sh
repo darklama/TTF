@@ -1,5 +1,7 @@
-#!/bin/sh
-cd ../..
+#!/bin/bash
+
+SOURCE_PATH=$( cd "$PWD/${BASH_SOURCE[0]%/*}"; pwd )
+cd "$SOURCE_PATH/../.."
 
 # Define some constants for our AI server:
 MAX_CHANNELS=999999
@@ -20,9 +22,22 @@ echo "Astron IP: $ASTRON_IP"
 echo "Event Logger IP: $EVENTLOGGER_IP"
 echo "==============================="
 
-while [ true ]
-do
-/usr/bin/python2 -m toontown.uberdog.ServiceStart --base-channel $BASE_CHANNEL \
-                 --max-channels $MAX_CHANNELS --stateserver $STATESERVER \
-                 --astron-ip $ASTRON_IP --eventlogger-ip $EVENTLOGGER_IP
-done
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  export DYLD_LIBRARY_PATH=`pwd`/Libraries.bundle
+  export DYLD_FRAMEWORK_PATH="Frameworks"
+
+  while [ true ]
+  do
+    ppython -m toontown.uberdog.ServiceStart --base-channel "$BASE_CHANNEL" \
+            --max-channels "$MAX_CHANNELS" --stateserver "$STATESERVER" \
+            --astron-ip "$ASTRON_IP" --eventlogger-ip "$EVENTLOGGER_IP"
+  done
+else
+  while [ true ]
+  do
+    /usr/bin/python2 -m toontown.uberdog.ServiceStart --base-channel "$BASE_CHANNEL" \
+                     --max-channels "$MAX_CHANNELS" --stateserver "$STATESERVER" \
+                     --astron-ip "$ASTRON_IP" --eventlogger-ip "$EVENTLOGGER_IP"
+  done
+fi
