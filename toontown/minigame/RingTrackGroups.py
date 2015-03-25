@@ -1,13 +1,17 @@
-import math
+from direct.showbase import PythonUtil
+
 import RingGameGlobals
 import RingAction
 import RingTracks
 import RingTrack
 import RingTrackGroup
-from direct.showbase import PythonUtil
+import math
+
+
 STATIC = 0
 SIMPLE = 1
 COMPLEX = 2
+
 
 def getRandomRingTrackGroup(type, numRings, rng):
     global trackListGenFuncs
@@ -58,7 +62,8 @@ def getTightCircleStaticPositions(numRings):
 
 
 def get_keypad(numRings, rng):
-    positions = (RingTracks.center,
+    positions = (
+     RingTracks.center,
      RingTracks.up,
      RingTracks.down,
      RingTracks.left,

@@ -1,19 +1,15 @@
-from pandac.PandaModules import *
 from toontown.toonbase.ToonBaseGlobal import *
 from direct.interval.IntervalGlobal import *
-from DistributedMinigame import *
 from direct.distributed.ClockDelta import *
 from direct.fsm import ClassicFSM, State
-from direct.fsm import State
-from direct.task import Task
+from toontown.toonbase import ToontownGlobals
+from .DistributedMinigame import DistributedMinigame
+
 import ArrowKeys
-import Ring
-import RingTrack
 import RingGameGlobals
 import RingGroup
 import RingTrackGroups
-from toontown.toonbase import ToontownGlobals
-from toontown.toonbase import TTLocalizer
+
 
 class DistributedRingGame(DistributedMinigame):
     UPDATE_ENVIRON_TASK = 'RingGameUpdateEnvironTask'

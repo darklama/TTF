@@ -1,13 +1,11 @@
-from pandac.PandaModules import *
 from toontown.toonbase.ToonBaseGlobal import *
 from pandac.PandaModules import NodePath
+
 import Ring
-import RingTrack
-import RingTrackGroup
 import RingGameGlobals
 
-class RingGroup(NodePath):
 
+class RingGroup(NodePath):
     def __init__(self, trackGroup, ringModel, posScale, colorIndices):
         NodePath.__init__(self)
         self.assign(hidden.attachNewNode(base.localAvatar.uniqueName('ring-group')))
@@ -17,6 +15,7 @@ class RingGroup(NodePath):
         self.__numRings = len(trackGroup.tracks)
         self.__rings = []
         self.__ringModels = []
+
         for i in xrange(0, self.__numRings):
             track = trackGroup.tracks[i]
             tOffset = trackGroup.trackTOffsets[i]

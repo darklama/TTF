@@ -1,15 +1,13 @@
-from direct.interval.IntervalGlobal import *
 from pandac.PandaModules import *
+from direct.interval.IntervalGlobal import *
 
 class BlinkingArrows:
-
-    def __init__(self, parent = aspect2d, otherNode = None):
+    def __init__(self, parent = None, otherNode = None):
         self.arrow1 = loader.loadModel('phase_3/models/props/arrow')
         self.arrow2 = loader.loadModel('phase_3/models/props/arrow')
         self.arrowTrack = None
-        self.parent = parent
+        self.parent = parent if parent is not None else aspect2d
         self.otherNode = otherNode
-        return
 
     def delete(self):
         self.arrowsOff()
@@ -59,4 +57,3 @@ class BlinkingArrows:
         self.arrow2.hide()
         if self.otherNode:
             self.otherNode.hide()
-        return

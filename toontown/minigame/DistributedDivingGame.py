@@ -1,33 +1,31 @@
-from direct.showbase.ShowBaseGlobal import *
 from toontown.toonbase.ToonBaseGlobal import *
+from direct.showbase.ShowBaseGlobal import *
 from direct.interval.IntervalGlobal import *
-from toontown.toonbase import ToontownTimer
-from DistributedMinigame import *
 from direct.distributed.ClockDelta import *
+from direct.distributed import DistributedSmoothNode
+from direct.actor import Actor
 from direct.fsm import ClassicFSM
 from direct.fsm import State
 from direct.task import Task
-from direct.actor import Actor
+
+from otp.distributed.TelemetryLimiter import TelemetryLimiter, TLGatherAllAvs
+
+from toontown.toonbase import ToontownTimer
+from toontown.toonbase import ToontownGlobals
+from toontown.toonbase import TTLocalizer
 from toontown.toon import LaffMeter
-from direct.distributed import DistributedSmoothNode
+
 import ArrowKeys
-import Ring
-import RingTrack
 import DivingGameGlobals
-import RingGroup
-import RingTrackGroups
-import random
 import DivingGameToonSD
 import DivingFishSpawn
 import DivingTreasure
-import math
 import TreasureScorePanel
-from otp.distributed.TelemetryLimiter import TelemetryLimiter, TLGatherAllAvs
-from toontown.toonbase import ToontownGlobals
-from toontown.toonbase import TTLocalizer
+
+import math
+
 
 class DivingGameRotationLimiter(TelemetryLimiter):
-
     def __init__(self, h, p):
         self._h = h
         self._p = p
