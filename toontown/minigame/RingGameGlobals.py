@@ -1,5 +1,7 @@
+from toontown.toonbase import ToontownGlobals
 from pandac.PandaModules import VBase4
 from toontown.toonbase import TTLocalizer
+
 
 ENDLESS_GAME = config.GetBool('endless-ring-game', 0)
 NUM_RING_GROUPS = 16
