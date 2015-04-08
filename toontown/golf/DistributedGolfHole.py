@@ -24,35 +24,11 @@ from toontown.distributed import DelayDelete
 class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, GolfHoleBase.GolfHoleBase):
     defaultTransitions = {'Off': ['Cleanup', 'ChooseTee', 'WatchTee'],
      'ChooseTee': ['Aim', 'Cleanup'],
-     'WatchTee': ['WatchAim',
-                  'Cleanup',
-                  'WatchTee',
-                  'ChooseTee',
-                  'Aim'],
-     'Wait': ['Aim',
-              'WatchAim',
-              'Playback',
-              'Cleanup',
-              'ChooseTee',
-              'WatchTee'],
-     'Aim': ['Shoot',
-             'Playback',
-             'Cleanup',
-             'Aim',
-             'WatchAim'],
-     'WatchAim': ['WatchAim',
-                  'WatchShoot',
-                  'Playback',
-                  'Cleanup',
-                  'Aim',
-                  'ChooseTee',
-                  'WatchTee'],
-     'Playback': ['Wait',
-                  'Aim',
-                  'WatchAim',
-                  'Cleanup',
-                  'ChooseTee',
-                  'WatchTee'],
+     'WatchTee': ['WatchAim', 'Cleanup', 'WatchTee', 'ChooseTee', 'Aim'],
+     'Wait': ['Aim', 'WatchAim', 'Playback', 'Cleanup', 'ChooseTee', 'WatchTee'],
+     'Aim': ['Shoot', 'Playback', 'Cleanup', 'Aim', 'WatchAim'],
+     'WatchAim': ['WatchAim', 'WatchShoot', 'Playback', 'Cleanup', 'Aim', 'ChooseTee', 'WatchTee'],
+     'Playback': ['Wait', 'Aim', 'WatchAim', 'Cleanup', 'ChooseTee','WatchTee'],
      'Cleanup': ['Off']}
     id = 0
     notify = directNotify.newCategory('DistributedGolfHole')
@@ -65,9 +41,11 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
 
     def __init__(self, cr):
         self.notify.debug('Hole Init')
+
         DistributedPhysicsWorld.DistributedPhysicsWorld.__init__(self, base.cr)
         GolfHoleBase.GolfHoleBase.__init__(self, 1)
         FSM.__init__(self, 'Golf_%s_FSM' % self.id)
+
         self.currentGolfer = 0
         self.ballDict = {}
         self.ballShadowDict = {}
@@ -101,18 +79,15 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         self.playBackDelayDelete = None
         self.aimMomentum = 0.0
         self.lastBumpSfxPos = Point3(0, 0, 0)
+
         self.__textGen = TextNode('golfHoleText')
         self.__textGen.setFont(ToontownGlobals.getSignFont())
         self.__textGen.setAlign(TextNode.ACenter)
-        if TTLocalizer.getLanguage() in ['castillian',
-         'japanese',
-         'german',
-         'portuguese',
-         'french']:
+        if TTLocalizer.getLanguage() in ['castillian', 'japanese', 'german', 'portuguese', 'french']:
             self.__textGen.setGlyphScale(0.7)
+
         self.avIdList = []
         self.enterAimStart = 0
-        return
 
     def generate(self):
         self.notify.debug('Hole Generate')
@@ -125,6 +100,7 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         self.sendReady()
         self.request('Off')
         index = 1
+
         for avId in self.avIdList:
             self.createBall(avId, index)
             self.createClub(avId)
@@ -133,18 +109,20 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         if self.avIdList:
             avId = self.avIdList[0]
             self.currentGolfer = avId
+
         self.currentGolferActive = False
 
     def delete(self):
         self.removePlayBackDelayDelete()
         self.request('Cleanup')
         taskMgr.remove(self.golfPowerTaskName)
-        DistributedPhysicsWorld.DistributedPhysicsWorld.delete(self)
-        GolfHoleBase.GolfHoleBase.delete(self)
+
         if hasattr(self, 'perfectIval'):
             self.perfectIval.pause()
             del self.perfectIval
+
         self.golfCourse = None
+
         if self.teeInstructions:
             self.teeInstructions.destroy()
             self.teeInstructions = None
@@ -163,26 +141,28 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         if self.camInterval:
             self.camInterval.pause()
             self.camInterval = None
+
         for club in self.clubs:
             self.clubs[club].removeNode()
 
         del self.clubs
-        if hasattr(self, 'scoreBoard'):
-            if hasattr(self.scoreBoard, 'maximizeB'):
-                if self.scoreBoard.maximizeB:
-                    self.scoreBoard.maximizeB.hide()
+
+        if hasattr(self, 'scoreBoard') and hasattr(self.scoreBoard, 'maximizeB'):
+            if self.scoreBoard.maximizeB:
+                self.scoreBoard.maximizeB.hide()
         if not self.titleLabel == None:
             self.titleLabel.destroy()
-            self.notify.debug('Deleted title label')
-        self.notify.debug('Delete function')
         if self.flyOverInterval:
             self.flyOverInterval.pause()
-        self.flyOverInterval = None
+            self.flyOverInterval = None
+
         for key in self.ballShadowDict:
             self.ballShadowDict[key].removeNode()
 
         self.dropShadowModel.removeNode()
-        return
+
+        DistributedPhysicsWorld.DistributedPhysicsWorld.delete(self)
+        GolfHoleBase.GolfHoleBase.delete(self)
 
     def sendReady(self):
         self.sendUpdate('setAvatarReadyHole', [])
@@ -1218,7 +1198,8 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         taskMgr.remove('update task')
         if hasattr(self, 'arrowKeys'):
             self.arrowKeys.destroy()
-        self.arrowKeys = None
+            self.arrowKeys = None
+
         self.ignoreAll()
         if self.swingInterval:
             self.swingInterval.pause()
@@ -1226,8 +1207,8 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         if self.sfxInterval:
             self.sfxInterval.pause()
             self.sfxInterval = None
+
         self.cleanupGeom()
-        return
 
     def exitCleanup(self):
         pass
@@ -1246,9 +1227,11 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
          ballInFrame,
          ballTouchedHoleFrame,
          ballFirstTouchedHoleFrame))
+
         if self.state == 'Playback':
             self.notify.debug('SMASHED PLAYBACK')
             return
+
         self.ballShadowDict[avId].show()
         self.holdCycleTime = cycleTime
         self.holdCommonObjectData = commonObjectData
@@ -1261,12 +1244,15 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         self.notify.debug('playback movie duration=%s' % self.playbackMovieDuration)
         displacement = self.holePositions[0] - endingBallPos
         self.ballWillGoInHole = False
+
         if displacement.length() <= GolfGlobals.DistanceToBeInHole:
             self.ballWillGoInHole = True
+
         self.notify.debug('endingBallPos=%s, distanceToHole=%s, ballWillGoInHole=%s' % (endingBallPos, displacement.length(), self.ballWillGoInHole))
         self.ballDropTime = ballInFrame * self.DTAStep
         self.ballTouchedHoleTime = ballTouchedHoleFrame * self.DTAStep
         self.ballFirstTouchedHoleTime = ballFirstTouchedHoleFrame * self.DTAStep
+
         if self.state == 'WatchTee':
             self.request('WatchAim')
         self.request('Playback')
@@ -1523,6 +1509,7 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         path = bamFile[0:bamFile.find(fileName)]
         camModelFullPath = path + camModelName
         cameraAnimFullPath = path + cameraName
+
         try:
             self.flyOverActor = Actor.Actor(camModelFullPath, {'camera': cameraAnimFullPath})
         except StandardError:
@@ -1535,18 +1522,29 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         flyOverJoint = self.flyOverActor.find('**/camera1')
         children = flyOverJoint.getChildren()
         numChild = children.getNumPaths()
+
         for i in xrange(numChild):
             childNodePath = children.getPath(i)
+            childNodePath.cleanup()
             childNodePath.removeNode()
 
         self.flyOverJoint = flyOverJoint
-        self.flyOverInterval = Sequence(Func(base.camera.reparentTo, flyOverJoint), Func(base.camera.clearTransform), Func(self.titleLabel.show), ActorInterval(self.flyOverActor, 'camera'), Func(base.camera.reparentTo, self.ballFollow), Func(base.camera.setPos, self.camPosBallFollow), Func(base.camera.setHpr, self.camHprBallFollow))
+        self.flyOverInterval = Sequence(
+         Func(base.camera.reparentTo, flyOverJoint),
+         Func(base.camera.clearTransform),
+         Func(self.titleLabel.show),
+         ActorInterval(self.flyOverActor, 'camera'),
+         Func(base.camera.reparentTo, self.ballFollow),
+         Func(base.camera.setPos, self.camPosBallFollow),
+         Func(base.camera.setHpr, self.camHprBallFollow))
+
         if avId == localAvatar.doId:
             self.flyOverInterval.append(Func(self.setCamera2Ball))
             self.flyOverInterval.append(Func(self.safeRequestToState, 'ChooseTee'))
         else:
             self.flyOverInterval.append(Func(self.setCamera2Ball))
             self.flyOverInterval.append(Func(self.safeRequestToState, 'WatchTee'))
+
         self.flyOverInterval.append(Func(self.titleLabel.hide))
         self.flyOverInterval.append(Func(self.takeOutToon, avId))
         self.flyOverInterval.start()
@@ -1563,8 +1561,10 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         self.cameraRayNodePath.setPos(pos)
         self.cameraRayNodePath.lookAt(self.ballFollow)
         renderPos = self.cameraRayNodePath.getPos(render)
+
         if renderPos != pos:
             self.notify.debug('orientCamerRay this should not happen')
+
         ballPos = self.ballFollow.getPos(self.terrainModel)
         dirCam = Vec3(ballPos - pos)
         dirCam.normalize()
@@ -1577,40 +1577,38 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         x = position[0]
         y = position[1]
         z = position[2]
-        if avId not in self.golfCourse.drivingToons:
-            x = position[0]
-            y = position[1]
-            z = position[2]
-        self.swingTime = cycleTime
         lift = 0
         ball = self.ball
         forceMove = 2500
+
         if power > 50:
             lift = 0
+
         ball.enable()
         ball.setPosition(x, y, z)
         ball.setLinearVel(0.0, 0.0, 0.0)
         ball.setAngularVel(0.0, 0.0, 0.0)
         ball.addForce(Vec3(dirX * forceMove * power / 100.0, dirY * forceMove * power / 100.0, lift))
         self.initRecord()
-        safety = 0
         self.llv = None
         self.record(ball)
+
         while ball.isEnabled() and len(self.recording) < 2000:
             self.preStep()
             self.simulate()
             self.postStep()
             self.record(ball)
-            safety += 1
 
         self.record(ball)
         midTime = globalClock.getRealTime()
         self.processRecording()
         self.processAVRecording()
+
         self.notify.debug('Recording End time %s cycle %s len %s avLen %s' % (self.timingSimTime,
          self.getSimCycleTime(),
          len(self.recording),
          len(self.aVRecording)))
+
         self.request('WaitPlayback')
         length = len(self.recording) - 1
         x = self.recording[length][1]
@@ -1620,14 +1618,22 @@ class DistributedGolfHole(DistributedPhysicsWorld.DistributedPhysicsWorld, FSM, 
         endTime = globalClock.getRealTime()
         diffTime = endTime - startTime
         fpsTime = self.frame / diffTime
+
         self.notify.debug('Time Start %s Mid %s End %s Diff %s Fps %s frames %s' % (startTime,
          midTime,
          endTime,
          diffTime,
          fpsTime,
          self.frame))
-        self.ballMovie2Client(cycleTime, avId, self.recording, self.aVRecording, self.ballInHoleFrame, self.ballTouchedHoleFrame, self.ballFirstTouchedHoleFrame)
-        return
+
+        self.ballMovie2Client(
+         diffTime,
+         avId,
+         self.recording,
+         self.aVRecording,
+         self.ballInHoleFrame,
+         self.ballTouchedHoleFrame,
+         self.ballFirstTouchedHoleFrame)
 
     def handleBallHitNonGrass(self, c0, c1):
         if not self.inPlayBack:

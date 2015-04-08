@@ -1,13 +1,15 @@
-from pandac.PandaModules import *
 from direct.gui.DirectGui import *
-from direct.gui import DirectGuiGlobals
 from pandac.PandaModules import *
+from direct.gui import DirectGuiGlobals
 from direct.directnotify import DirectNotifyGlobal
-import TTDialog
-from toontown.toonbase import TTLocalizer
 from direct.showbase import PythonUtil
 from direct.showbase.DirectObject import DirectObject
-from otp.login import LeaveToPayDialog
+
+import TTDialog
+
+from toontown.toonbase import TTLocalizer
+
+
 Pages = {'otherHoods': (TTLocalizer.TeaserOtherHoods,),
  'typeAName': (TTLocalizer.TeaserTypeAName,),
  'sixToons': (TTLocalizer.TeaserSixToons,),
@@ -31,6 +33,7 @@ Pages = {'otherHoods': (TTLocalizer.TeaserOtherHoods,),
  'restockGags': (TTLocalizer.TeaserRestockGags,),
  'getGags': (TTLocalizer.TeaserGetGags,),
  'useGags': (TTLocalizer.TeaserUseGags,)}
+
 PageOrder = ['sixToons',
  'typeAName',
  'species',
@@ -60,42 +63,28 @@ class TeaserPanel(DirectObject):
 
     def __init__(self, pageName, doneFunc = None):
         self.doneFunc = doneFunc
+
         if not hasattr(self, 'browser'):
             self.browser = FeatureBrowser()
             self.browser.load()
             self.browser.setPos(0, 0, TTLocalizer.TPbrowserPosZ)
             self.browser.setScale(0.75)
             self.browser.reparentTo(hidden)
+
         self.upsellBackground = loader.loadModel('phase_3/models/gui/tt_m_gui_ups_panelBg')
         self.leaveDialog = None
         self.showPage(pageName)
         self.ignore('exitingStoppedState')
         self.accept('exitingStoppedState', self.cleanup)
-        return
 
     def __handleDone(self, choice = 0):
         self.cleanup()
         self.unload()
-        if choice == 1:
-            self.__handlePay()
-        else:
-            self.__handleContinue()
+        self.__handleContinue()
 
     def __handleContinue(self):
         if self.doneFunc:
-            self.notify.debug('calling doneFunc')
             self.doneFunc()
-
-    def __handlePay(self):
-        if base.cr.isWebPlayToken() or __dev__:
-            if self.leaveDialog == None:
-                self.notify.debug('making LTP')
-                self.leaveDialog = LeaveToPayDialog.LeaveToPayDialog(0, doneFunc=self.doneFunc)
-            self.notify.debug('showing LTP')
-            self.leaveDialog.show()
-        else:
-            self.notify.error('You should not have a TeaserPanel without a PlayToken')
-        return
 
     def destroy(self):
         self.cleanup()
@@ -112,7 +101,6 @@ class TeaserPanel(DirectObject):
             self.leaveDialog.destroy()
             self.leaveDialog = None
         self.ignoreAll()
-        return
 
     def unload(self):
         if hasattr(self, 'browser'):
@@ -157,7 +145,6 @@ class TeaserPanel(DirectObject):
 
 
 class FeatureBrowser(DirectScrolledList):
-
     def __init__(self, parent = aspect2dp, **kw):
         self.parent = parent
         optiondefs = (('parent', self.parent, None),
@@ -169,7 +156,6 @@ class FeatureBrowser(DirectScrolledList):
         self.incButton.hide()
         self.decButton.hide()
         self.initialiseoptions(FeatureBrowser)
-        return
 
     def destroy(self):
         DirectScrolledList.destroy(self)
@@ -178,6 +164,7 @@ class FeatureBrowser(DirectScrolledList):
         guiModel = loader.loadModel('phase_3/models/gui/tt_m_gui_ups_logo_noText')
         leftLocator = guiModel.find('**/bubbleLeft_locator')
         rightLocator = guiModel.find('**/bubbleRight_locator')
+
         haveFunNode = TextNode('Have Fun')
         haveFunNode.setText(TTLocalizer.TeaserHaveFun)
         haveFunNode.setTextColor(0, 0, 0, 1)
@@ -187,6 +174,7 @@ class FeatureBrowser(DirectScrolledList):
         haveFun = NodePath(haveFunNode)
         haveFun.reparentTo(rightLocator)
         haveFun.setScale(TTLocalizer.TPhaveFun)
+
         JoinUsNode = TextNode('Join Us')
         JoinUsNode.setText(TTLocalizer.TeaserJoinUs)
         JoinUsNode.setTextColor(0, 0, 0, 1)
@@ -197,6 +185,7 @@ class FeatureBrowser(DirectScrolledList):
         JoinUs.reparentTo(leftLocator)
         JoinUs.setPos(0, 0, -0.025)
         JoinUs.setScale(TTLocalizer.TPjoinUs)
+
         for page in PageOrder:
             textInfo = Pages.get(page)
             textInfo = textInfo[0] + TTLocalizer.TeaserDefault
@@ -204,4 +193,3 @@ class FeatureBrowser(DirectScrolledList):
             self.addItem(panel)
 
         guiModel.removeNode()
-        return

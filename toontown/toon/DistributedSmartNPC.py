@@ -1,20 +1,21 @@
-from pandac.PandaModules import *
-
-from DistributedNPCToonBase import *
 from toontown.chat.ChatGlobals import *
-from toontown.hood import ZoneUtil
 from toontown.nametag.NametagGlobals import *
+from pandac.PandaModules import *
+from direct.directnotify import DirectNotifyGlobal
+from DistributedNPCToonBase import DistributedNPCToonBase
+
+from toontown.hood import ZoneUtil
 from toontown.quest import QuestChoiceGui
 from toontown.quest import QuestParser
-from toontown.quest import TrackChoiceGui
 from toontown.toonbase import TTLocalizer
-from toontown.toontowngui import TeaserPanel
 
 
 SPAMMING = 1
 DOUBLE_ENTRY = 2
 
+
 class DistributedSmartNPC(DistributedNPCToonBase):
+    notify = DirectNotifyGlobal.directNotify.newCategory('DistributedSmartNPC')
 
     def __init__(self, cr):
         DistributedNPCToonBase.__init__(self, cr)
@@ -44,4 +45,4 @@ class DistributedSmartNPC(DistributedNPCToonBase):
             name = base.cr.doId2do.get(avId).getName()
             self.setChatAbsolute(message, CFSpeech | CFTimeout)
         except:
-            print 'Responding to non-available character!'
+            self.notify.warning('Responding to non-available character!')

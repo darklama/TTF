@@ -29,11 +29,12 @@ class FishAnimatedProp(AnimatedProp.AnimatedProp):
 
     def delete(self):
         self.exitRipples.destroy()
-        del self.exitRipples
         self.splash.destroy()
+        self.fish.cleanup()
+        self.fish.removeNode()
+        del self.exitRipples
         del self.splash
         del self.track
-        self.fish.removeNode()
         del self.fish
         del self.node
         del self.geom

@@ -20,6 +20,7 @@ import CannonGameGlobals
 from direct.gui.DirectGui import *
 from pandac.PandaModules import *
 from toontown.toonbase import TTLocalizer
+
 LAND_TIME = 2
 WORLD_SCALE = 2.0
 GROUND_SCALE = 1.4 * WORLD_SCALE
@@ -417,7 +418,7 @@ class DistributedCannonGame(DistributedMinigame):
         if not self.hasLocalToon:
             return
         self.notify.debug('announceToonWillLandInWater: ' + str(avId) + ': time=' + str(landTime))
-        if self.clockStopTime == None:
+        if self.clockStopTime is None:
             self.clockStopTime = landTime
         return
 

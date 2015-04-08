@@ -13,7 +13,6 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
         self.tutorial = 0
         self.pendingAvId = None
         self.task = None
-        return
 
     def getTutorial(self):
         return self.tutorial
@@ -54,7 +53,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
         if questId == 0:
             self.pendingAvId = None
             self.pendingQuests = None
-            self.air.questManager.avatarCancelled(self)
+            self.air.questManager.avatarCancelled(avId)
             self.cancelChoseQuest(avId)
             return
         if questId == 401:
@@ -62,16 +61,17 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
             if not av:
                 self.notify.warning('chooseQuest: av not present: %s' % avId)
                 return
+
         for quest in self.pendingQuests:
             if questId == quest[0]:
                 self.pendingAvId = None
                 self.pendingQuests = None
                 self.air.questManager.avatarChoseQuest(avId, self, *quest)
                 return
+
         self.notify.warning('chooseQuest: avatar: %s chose a quest not offered: %s' % (avId, questId))
         self.pendingAvId = None
         self.pendingQuests = None
-        return
 
     def chooseTrack(self, trackId):
         avId = self.air.getAvatarIdFromSender()
@@ -93,9 +93,20 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
             self.air.questManager.avatarCancelled(avId)
             self.cancelChoseTrack(avId)
             return
+
         for track in self.pendingTracks:
             if trackId == track:
                 self.air.questManager.avatarChoseTrack(avId, self, self.pendingTrackQuest, trackId)
+                av = self.air.doId2do.get(avId)
+                if av.getTrackAccess() == [0 for x in xrange(7)]:
+                    av.b_setFirstTrackPicked(trackId)
+                else:
+                    av.b_setSecondTrackPicked(trackId)
+
+                av.addTrackAccess(trackId)
+                av.inventory.addItems(trackId, 0, 2)
+                av.d_setInventory(av.inventory.makeNetString())
+
                 self.pendingAvId = None
                 self.pendingTracks = None
                 self.pendingTrackQuest = None
@@ -105,7 +116,6 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
         self.pendingAvId = None
         self.pendingTracks = None
         self.pendingTrackQuest = None
-        return
 
     def sendTimeoutMovie(self, task):
         self.pendingAvId = None
@@ -141,6 +151,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          [],
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             taskMgr.doMethodLater(5.5, self.sendClearMovie, self.uniqueName('clearMovie'))
 
@@ -151,6 +162,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          [],
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -163,6 +175,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          [questId, rewardId, 0],
          ClockDelta.globalClockDelta.getRealNetworkTime(bits=16)])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -175,6 +188,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          [questId, completeStatus, toNpcId],
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -184,11 +198,13 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
         self.busy = avId
         if self.questCallback:
             self.questCallback()
+
         self.sendUpdate('setMovie', [NPCToons.QUEST_MOVIE_ASSIGN,
          self.npcId,
          avId,
          [questId, rewardId, toNpcId],
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -199,6 +215,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
         self.pendingAvId = avId
         self.pendingQuests = quests
         flatQuests = []
+
         for quest in quests:
             flatQuests.extend(quest)
 
@@ -207,6 +224,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          flatQuests,
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -222,6 +240,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          tracks,
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -234,6 +253,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          [],
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -246,6 +266,7 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
          avId,
          [],
          ClockDelta.globalClockDelta.getRealNetworkTime()])
+
         if not self.tutorial:
             self.clearTasks()
             self.task = self.uniqueName('clearMovie')
@@ -260,7 +281,6 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
         elif self.busy:
             self.air.writeServerEvent('suspicious', avId, 'DistributedNPCToonAI.setMovieDone busy with %s' % self.busy)
             self.notify.warning('somebody called setMovieDone that I was not busy with! avId: %s' % avId)
-        return
 
     def __handleUnexpectedExit(self, avId):
         self.notify.warning('avatar:' + str(avId) + ' has exited unexpectedly')
@@ -268,7 +288,6 @@ class DistributedNPCToonAI(DistributedNPCToonBaseAI):
         self.clearTasks()
         taskMgr.remove(self.uniqueName('clearMovie'))
         self.sendClearMovie(None)
-        return
 
     def clearTasks(self):
         if self.task:

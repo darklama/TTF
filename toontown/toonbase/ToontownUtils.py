@@ -8,7 +8,8 @@ class PriorityCallbacks(object):
   def clear(self):
     del self._callbacks[:]
 
-  def add(self, callback, priority=0):
+  def add(self, callback, priority = None):
+    priority = priority if priority is not None else 0
     if not isinstance(priority, int):
       raise NotImplemented
     item = (priority, callback)

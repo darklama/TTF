@@ -1,12 +1,13 @@
 from pandac.PandaModules import *
+from toontown.toonbase import ToontownGlobals
+from toontown.toonbase import TTLocalizer
+from direct.showbase import AppRunnerGlobal
+from direct.directnotify import DirectNotifyGlobal
+
 import random
 import string
 import copy
-from toontown.toonbase import ToontownGlobals
-from toontown.toonbase import TTLocalizer
 import os
-from direct.showbase import AppRunnerGlobal
-from direct.directnotify import DirectNotifyGlobal
 
 class NameGenerator:
     text = TextNode('text')
@@ -40,7 +41,7 @@ class NameGenerator:
         searchPath = DSearchPath()
         if __debug__:
             searchPath.appendDirectory(Filename('../resources/phase_3/etc'))
-        searchPath.appendDirectory(Filename('/phase_3/etc'))
+        searchPath.appendDirectory(Filename('resources/phase_3/etc'))
         filename = Filename(TTLocalizer.NameShopNameMaster)
         found = vfs.resolveFilename(filename, searchPath)
         if not found:

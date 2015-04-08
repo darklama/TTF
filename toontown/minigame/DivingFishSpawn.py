@@ -46,6 +46,7 @@ class DivingFishSpawn(DirectObject):
             fish.name = 'piano'
         else:
             return
+
         fish.active = 1
         fish.direction = self.direction
         idCode = self.getUniqueNumber()
@@ -54,6 +55,7 @@ class DivingFishSpawn(DirectObject):
         fish.reparentTo(render)
         fish.setScale(1)
         fish.moveLerp = Sequence()
+
         if fish.name == 'clown':
             fish.setH(90 * self.direction)
             fish.loop('anim')
@@ -86,10 +88,12 @@ class DivingFishSpawn(DirectObject):
             fish.setScale(1.4)
             cSphere = CollisionSphere(0, 0, 0, 1)
             fishSoundName = 'Piano_Tuna.ogg'
+
             if self.direction is -1:
                 fish.setH(0)
             else:
                 fish.setH(180)
+
         cSphere.setTangible(0)
         fish.offset = 0
         cSphereNode = CollisionNode('fc' + str(fish.code))
@@ -98,7 +102,9 @@ class DivingFishSpawn(DirectObject):
         cSphereNode.setIntoCollideMask(DivingGameGlobals.CollideMask)
         cSphereNodePath = fish.attachNewNode(cSphereNode)
         self.accept('into-' + 'fc' + str(fish.code), self.__handleFishCollide)
-        fish.moveloop = Sequence(Wait(4), LerpScaleInterval(fish, startScale=1, scale=3, duration=1), Wait(1.5), LerpScaleInterval(fish, startScale=3, scale=1, duration=0.5))
+        fish.moveloop = Sequence(
+         Wait(4), LerpScaleInterval(fish, startScale=1, scale=3, duration=1),
+         Wait(1.5), LerpScaleInterval(fish, startScale=3, scale=1, duration=0.5))
         return fish
 
     def destroy(self):
@@ -111,10 +117,10 @@ class DivingFishSpawn(DirectObject):
                 fish.sound = None
             fish.moveLerp = None
             fish.specialLerp = None
+            fish.cleanup()
             fish.removeNode()
-            del fish
 
-        return
+        self.fishArray.clear()
 
     def __handleFishCollide(self, collEntry):
         messenger.send('FishHit', [collEntry])

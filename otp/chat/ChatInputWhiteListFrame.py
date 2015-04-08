@@ -1,9 +1,8 @@
-from direct.directnotify import DirectNotifyGlobal
-from direct.fsm import FSM
 from direct.gui.DirectGui import *
-from direct.task import Task
 from pandac.PandaModules import *
-import sys
+from direct.directnotify import DirectNotifyGlobal
+from direct.fsm.FSM import FSM
+from direct.task import Task
 
 from otp.chat.ChatInputTyped import ChatInputTyped
 from otp.otpbase import OTPGlobals
@@ -11,14 +10,17 @@ from otp.otpbase import OTPLocalizer
 from toontown.chat.ChatGlobals import *
 
 
-class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
+class ChatInputWhiteListFrame(FSM, DirectFrame):
     notify = DirectNotifyGlobal.directNotify.newCategory('ChatInputWhiteList')
 
     def __init__(self, entryOptions, parent = None, **kw):
-        FSM.FSM.__init__(self, 'ChatInputWhiteListFrame')
+        FSM.__init__(self, 'ChatInputWhiteListFrame')
+
         self.okayToSubmit = True
         self.receiverId = None
+
         DirectFrame.__init__(self, parent=aspect2dp, pos=(0, 0, 0.3), relief=None, image=DGG.getDefaultDialogGeom(), image_scale=(1.6, 1, 1.4), image_pos=(0, 0, -0.05), image_color=OTPGlobals.GlobalDialogColor, borderWidth=(0.01, 0.01))
+
         optiondefs = {'parent': self,
          'relief': DGG.SUNKEN,
          'scale': 0.05,
@@ -41,13 +43,16 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
          'focus': 0,
          'text': '',
          'sortOrder': DGG.FOREGROUND_SORT_INDEX}
+
         entryOptions['parent'] = self
         self.chatEntry = DirectEntry(**entryOptions)
         self.whisperId = None
         self.chatEntry.bind(DGG.OVERFLOW, self.chatOverflow)
         wantHistory = 0
+
         if __dev__:
             wantHistory = 1
+
         self.wantHistory = base.config.GetBool('want-chat-history', wantHistory)
         self.history = ['']
         self.historySize = base.config.GetInt('chat-history-size', 10)
@@ -59,16 +64,19 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
         self.autoOff = 0
         self.sendBy = 'Mode'
         self.prefilter = 1
+
         from direct.gui import DirectGuiGlobals
+
         self.chatEntry.bind(DirectGuiGlobals.TYPE, self.applyFilter)
         self.chatEntry.bind(DirectGuiGlobals.ERASE, self.applyFilter)
+
         tpMgr = TextPropertiesManager.getGlobalPtr()
         Red = tpMgr.getProperties('red')
         Red.setTextColor(1.0, 0.0, 0.0, 1)
         tpMgr.setProperties('WLRed', Red)
         del tpMgr
+
         self.origFrameColor = self.chatEntry['frameColor']
-        return
 
     def destroy(self):
         from direct.gui import DirectGuiGlobals
@@ -76,6 +84,7 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
         self.chatEntry.unbind(DirectGuiGlobals.TYPE)
         self.chatEntry.unbind(DirectGuiGlobals.ERASE)
         self.chatEntry.ignoreAll()
+        self.chatEntry.destroy()
         DirectFrame.destroy(self)
 
     def delete(self):
@@ -101,7 +110,8 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
                 messenger.send('Chat-Failed avatar typed chat test')
                 self.notify.warning('Chat-Failed avatar typed chat test')
                 return None
-        return FSM.FSM.defaultFilter(self, request, *args)
+
+        return FSM.defaultFilter(self, request, *args)
 
     def enterOff(self):
         self.deactivate()
@@ -153,6 +163,7 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
         self.receiverId = receiverId
         self.toPlayer = toPlayer
         result = None
+
         if not self.receiverId:
             result = self.requestMode('AllChat')
         elif self.receiverId and not self.toPlayer:
@@ -161,6 +172,7 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
         elif self.receiverId and self.toPlayer:
             self.whisperId = receiverId
             result = self.requestMode('PlayerWhisper')
+
         return result
 
     def activate(self):
@@ -256,7 +268,6 @@ class ChatInputWhiteListFrame(FSM.FSM, DirectFrame):
         self.applyFilter(keyArgs=None, strict=True)
         self.okayToSubmit = True
         self.chatEntry.guiItem.setAcceptEnabled(True)
-        return
 
     def chatOverflow(self, overflowText):
         self.notify.debug('chatOverflow')

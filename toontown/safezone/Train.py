@@ -1,16 +1,17 @@
+from direct.interval.IntervalGlobal import *
 from pandac.PandaModules import *
 from direct.showbase.DirectObject import DirectObject
-from direct.interval.IntervalGlobal import *
 from direct.distributed.ClockDelta import globalClockDelta
 from direct.distributed.ClockDelta import NetworkTimePrecision
-import random
 from direct.task.Task import Task
 from direct.directnotify.DirectNotifyGlobal import directNotify
 from direct.fsm import ClassicFSM
 from direct.fsm import State
 from direct.directutil import Mopath
 from toontown.toonbase import ToontownGlobals
-from direct.actor import Actor
+
+import random
+
 
 class Train(DirectObject):
     notify = directNotify.newCategory('Train')
@@ -33,9 +34,11 @@ class Train(DirectObject):
         self.trainStopStartSfx = base.loadSfx(self.Sfx_TrainStopStart)
         self.trainId = trackNum
         self.bFlipped = False
+
         if trackStartPos[0] < trackEndPos[0]:
             self.locomotive.setHpr(180, 0, 0)
             self.bFlipped = True
+
         self.collNodeName = 'CollNode-%s' % self.trainId
         self.firstMark = self.MarkDelta / numTotalTracks * trackNum
         currentTime = self.__networkTimeInSeconds()
@@ -57,34 +60,40 @@ class Train(DirectObject):
         return time
 
     def doNextRun(self, bFirstRun = False):
-        if self.locomotive:
-            if bFirstRun:
-                nextMark = self.lastMark
-            else:
-                nextMark = self.lastMark + self.MarkDelta
-                self.nextRun.finish()
-            self.notify.debug('Next mark %s' % nextMark)
-            currentTime = self.__networkTimeInSeconds()
-            timeTillNextMark = nextMark - currentTime
-            self.notify.debug('Time diff %s' % timeTillNextMark)
-            runNumber = int((nextMark - self.firstMark) / self.MarkDelta)
-            S = random.getstate()
-            random.seed(self.trainId + runNumber)
-            self.nextRun = self.__getNextRun()
-            random.setstate(S)
-            self.__startNextRun(timeTillNextMark)
-            self.lastMark = nextMark
+        if not self.locomotive:
+            return Task.done
+        if bFirstRun:
+            nextMark = self.lastMark
+        else:
+            nextMark = self.lastMark + self.MarkDelta
+            self.nextRun.finish()
+
+        self.notify.debug('Next mark %s' % nextMark)
+        currentTime = self.__networkTimeInSeconds()
+        timeTillNextMark = nextMark - currentTime
+        self.notify.debug('Time diff %s' % timeTillNextMark)
+        runNumber = int((nextMark - self.firstMark) / self.MarkDelta)
+        S = random.getstate()
+        random.seed(self.trainId + runNumber)
+        self.nextRun = self.__getNextRun()
+        random.setstate(S)
+        self.__startNextRun(timeTillNextMark)
+        self.lastMark = nextMark
+
         return Task.done
 
     def __startNextRun(self, timeTillMark):
-        if self.locomotive:
-            self.__disableCollisions()
-            if timeTillMark > 0:
-                self.nextRun = Sequence(Wait(timeTillMark), self.nextRun)
-                self.nextRun.start()
-            else:
-                self.nextRun.start(-1 * timeTillMark)
-            self.__enableCollisions()
+        if not self.locomotive:
+            return Task.done
+
+        self.__disableCollisions()
+        if timeTillMark > 0:
+            self.nextRun = Sequence(Wait(timeTillMark), self.nextRun)
+            self.nextRun.start()
+        else:
+            self.nextRun.start(-1 * timeTillMark)
+
+        self.__enableCollisions()
         return Task.done
 
     def __cleanupCars(self):
@@ -112,22 +121,36 @@ class Train(DirectObject):
         self.__getCars()
         trainShouldStop = random.randrange(0, 4)
         nextRun = Sequence(Func(self.__showStart))
+
         if trainShouldStop is 0:
             waitTime = 3
             totalTime = random.randrange(4, (self.MarkDelta - waitTime) / 2)
             sfxStopTime = 4.3
             halfway = (self.trackStartPos + self.trackEndPos) / 2
             halfway.setX(150)
-            nextRun.append(Parallel(Sequence(Wait(totalTime - sfxStopTime), SoundInterval(self.trainStopStartSfx, volume=0.5)), Sequence(LerpPosInterval(self.locomotive, totalTime, halfway, self.trackStartPos, blendType='easeInOut'), WaitInterval(waitTime), LerpPosInterval(self.locomotive, totalTime, self.trackEndPos, halfway, blendType='easeIn'))))
+            nextRun.append(
+             Parallel(
+              Sequence(
+               Wait(totalTime - sfxStopTime),
+               SoundInterval(self.trainStopStartSfx, volume=0.5)),
+              Sequence(
+               LerpPosInterval(self.locomotive, totalTime, halfway, self.trackStartPos, blendType='easeInOut'),
+               WaitInterval(waitTime),
+               LerpPosInterval(self.locomotive, totalTime, self.trackEndPos, halfway, blendType='easeIn'))))
         else:
             totalTime = random.randrange(6, self.MarkDelta - 1)
             sfxTime = 7
             sfxStartTime = totalTime / 2 - sfxTime / 2
+
             if self.bFlipped:
                 sfxStartTime -= 1
             else:
                 sfxStartTime += 1
-            nextRun.append(Parallel(Sequence(Wait(sfxStartTime), SoundInterval(self.trainPassingSfx, volume=0.5)), LerpPosInterval(self.locomotive, totalTime, self.trackEndPos, self.trackStartPos)))
+
+            nextRun.append(
+             Parallel(
+              Sequence(Wait(sfxStartTime), SoundInterval(self.trainPassingSfx, volume=0.5)),
+              LerpPosInterval(self.locomotive, totalTime, self.trackEndPos, self.trackStartPos)))
         nextRun.append(Func(self.doNextRun))
         return nextRun
 
@@ -139,7 +162,6 @@ class Train(DirectObject):
         self.nextRun = None
         del self.trainPassingSfx
         del self.trainStopStartSfx
-        return
 
     def uniqueName(self, name):
         Train.nameId += 1

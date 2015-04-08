@@ -50,13 +50,10 @@ class TTChatInputWhiteList(ChatInputWhiteListFrame):
          0.23,
          -0.07,
          0.05), text=OTPLocalizer.ChatInputNormalWhisper, text_scale=0.04, text_fg=Vec4(0, 0, 0, 1), text_wordwrap=9.5, textMayChange=1)
-        self.chatEntry.bind(DGG.OVERFLOW, self.chatOverflow)
         self.chatEntry.bind(DGG.TYPE, self.typeCallback)
         self.trueFriendChat = 0
         if base.config.GetBool('whisper-to-nearby-true-friends', 1):
             self.accept(self.TFToggleKey, self.shiftPressed)
-            
-        return
 
     def shiftPressed(self):
         self.ignore(self.TFToggleKey)
@@ -92,15 +89,14 @@ class TTChatInputWhiteList(ChatInputWhiteListFrame):
             return
 
     def destroy(self):
-        self.chatEntry.destroy()
         self.chatFrame.destroy()
+        self.chatEntry.unbind(DGG.TYPE)
         self.ignoreAll()
         ChatInputWhiteListFrame.destroy(self)
 
     def delete(self):
         base.whiteList = None
         ChatInputWhiteListFrame.delete(self)
-        return
 
     def sendChat(self, text, overflow = False):
         if self.typeGrabbed:

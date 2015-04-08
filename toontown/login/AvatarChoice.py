@@ -8,7 +8,7 @@ from direct.gui.DirectGui import *
 from toontown.toonbase import TTLocalizer
 from direct.directnotify import DirectNotifyGlobal
 from toontown.toontowngui import TeaserPanel
-#from toontown.toonbase import UserFunnel
+
 NAME_ROTATIONS = (0, 0, 0, 0, 0, 0)
 NAME_POSITIONS = ((0, 0, 0.16),
  (0, 0, 0.3),
@@ -42,7 +42,7 @@ class AvatarChoice(DirectButton):
                     self.mode = AvatarChoice.MODE_LOCKED
                     self.name = ''
                     self.dna = None
-        if self.mode is not AvatarChoice.MODE_LOCKED:
+        if self.mode != AvatarChoice.MODE_LOCKED:
             if not av:
                 self.mode = AvatarChoice.MODE_CREATE
                 self.name = ''
@@ -71,7 +71,7 @@ class AvatarChoice(DirectButton):
             button.hide()
         self['image'] = self.buttonBgs[position]
         self.setScale(1.01)
-        if self.mode is AvatarChoice.MODE_LOCKED:
+        if self.mode == AvatarChoice.MODE_LOCKED:
             self['command'] = self.__handleTrialer
             self['text'] = TTLocalizer.AvatarChoiceSubscribersOnly
             self['text0_scale'] = 0.1
@@ -90,7 +90,7 @@ class AvatarChoice(DirectButton):
             logo.instanceTo(self.stateNodePath[2], 20)
             self.logo = logo
             upsellModel.removeNode()
-        elif self.mode is AvatarChoice.MODE_CREATE:
+        elif self.mode == AvatarChoice.MODE_CREATE:
             self['command'] = self.__handleCreate
             self['text'] = (TTLocalizer.AvatarChoiceMakeAToon,)
             self['text_pos'] = (0, 0)
@@ -214,7 +214,7 @@ class AvatarChoice(DirectButton):
         deleteText = TTLocalizer.AvatarChoiceDeleteConfirmText % {
             'name': self.name,
             'confirm': TTLocalizer.AvatarChoiceDeleteConfirmUserTypes}
-        if self.deleteWithPasswordFrame == None:
+        if self.deleteWithPasswordFrame is None:
             buttons = loader.loadModel('phase_3/models/gui/dialog_box_buttons_gui')
             buttons.flattenMedium()
             nameBalloon = loader.loadModel('phase_3/models/props/chatbox_input')

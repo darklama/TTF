@@ -1,7 +1,8 @@
 from pandac.PandaModules import *
 from direct.interval.IntervalGlobal import *
 
-class BlinkingArrows:
+
+class BlinkingArrows(object):
     def __init__(self, parent = None, otherNode = None):
         self.arrow1 = loader.loadModel('phase_3/models/props/arrow')
         self.arrow2 = loader.loadModel('phase_3/models/props/arrow')

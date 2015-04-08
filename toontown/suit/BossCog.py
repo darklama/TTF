@@ -1,4 +1,3 @@
-from direct.actor import Actor
 from direct.directnotify import DirectNotifyGlobal
 from direct.fsm import FSM
 from direct.fsm import State
@@ -6,7 +5,7 @@ from direct.interval.IntervalGlobal import *
 from direct.showbase.PythonUtil import Functor
 from direct.task.Task import Task
 from pandac.PandaModules import *
-import string
+
 import types
 
 import Suit
@@ -57,19 +56,19 @@ class BossCog(Avatar.Avatar):
         self.healthCondition = 0
         self.animDoneEvent = 'BossCogAnimDone'
         self.animIvalName = 'BossCogAnimIval'
-        return
 
     def delete(self):
-        Avatar.Avatar.delete(self)
         self.removeHealthBar()
         self.setDizzy(0)
         self.stopAnimate()
+
         if self.doorA:
             self.doorA.request('Off')
             self.doorB.request('Off')
             self.doorA = None
             self.doorB = None
-        return
+
+        Avatar.Avatar.delete(self)
 
     def setDNAString(self, dnaString):
         self.dna = SuitDNA.SuitDNA()
@@ -77,14 +76,14 @@ class BossCog(Avatar.Avatar):
         self.setDNA(self.dna)
 
     def setDNA(self, dna):
-        if self.style:
-            pass
-        else:
-            self.style = dna
-            self.generateBossCog()
-            self.initializeDropShadow()
-            if base.wantNametags:
-                self.initializeNametag3d()
+        if getattr(self, 'style', None):
+            return
+
+        self.style = dna
+        self.generateBossCog()
+        self.initializeDropShadow()
+        if base.wantNametags:
+            self.initializeNametag3d()
 
     def generateBossCog(self):
         self.throwSfx = loader.loadSfx('phase_9/audio/sfx/CHQ_VP_frisbee_gears.ogg')
@@ -103,14 +102,11 @@ class BossCog(Avatar.Avatar):
         self.murmur = loader.loadSfx('phase_9/audio/sfx/Boss_COG_VO_murmur.ogg')
         self.statement = loader.loadSfx('phase_9/audio/sfx/Boss_COG_VO_statement.ogg')
         self.question = loader.loadSfx('phase_9/audio/sfx/Boss_COG_VO_question.ogg')
-        self.dialogArray = [self.grunt,
-         self.murmur,
-         self.statement,
-         self.question,
-         self.statement,
-         self.statement]
+        self.dialogArray = [self.grunt, self.murmur, self.statement, self.question, self.statement, self.statement]
+
         dna = self.style
         filePrefix = ModelDict[dna.dept]
+
         self.loadModel(GenericModel + '-legs-zero', 'legs')
         self.loadModel(filePrefix + '-torso-zero', 'torso')
         self.loadModel(filePrefix + '-head-zero', 'head')
@@ -118,13 +114,16 @@ class BossCog(Avatar.Avatar):
         self.attach('head', 'torso', 'joint34')
         self.attach('torso', 'legs', 'joint_pelvis')
         self.rotateNode = self.attachNewNode('rotate')
+
         geomNode = self.getGeomNode()
         geomNode.reparentTo(self.rotateNode)
+
         self.frontAttack = self.rotateNode.attachNewNode('frontAttack')
         self.frontAttack.setPos(0, -10, 10)
         self.frontAttack.setScale(2)
         self.setHeight(26)
         self.nametag3d.setScale(2)
+
         for partName in ('legs', 'torso', 'head'):
             animDict = {}
             for anim in AnimList:
@@ -180,6 +179,7 @@ class BossCog(Avatar.Avatar):
     def updateHealthBar(self):
         if self.healthBar == None:
             return
+
         health = 1.0 - float(self.bossDamage) / float(self.bossMaxDamage)
         if health > 0.95:
             condition = 0
@@ -188,21 +188,22 @@ class BossCog(Avatar.Avatar):
         elif health > 0.8:
             condition = 2
         elif health > 0.7:
-            condition = 3#Yellow
+            condition = 3 #Yellow
         elif health > 0.6:
-            condition = 4            
+            condition = 4
         elif health > 0.5:
-            condition = 5           
+            condition = 5
         elif health > 0.3:
-            condition = 6#Orange
+            condition = 6 #Orange
         elif health > 0.15:
             condition = 7
         elif health > 0.05:
-            condition = 8#Red           
+            condition = 8 #Red
         elif health > 0.0:
-            condition = 9#Blinking Red
+            condition = 9 #Blinking Red
         else:
             condition = 10
+
         if self.healthCondition != condition:
             if condition == 9:
                 blinkTask = Task.loop(Task(self.__blinkRed), Task.pause(0.75), Task(self.__blinkGray), Task.pause(0.1))
@@ -215,11 +216,12 @@ class BossCog(Avatar.Avatar):
             else:
                 self.healthBar.setColor(self.healthColors[condition], 1)
                 self.healthBarGlow.setColor(self.healthGlowColors[condition], 1)
+
             self.healthCondition = condition
 
     def __blinkRed(self, task):
         if not self.healthBar:
-            return    
+            return
         self.healthBar.setColor(self.healthColors[8], 1)
         self.healthBarGlow.setColor(self.healthGlowColors[8], 1)
         if self.healthCondition == 10:
@@ -242,7 +244,6 @@ class BossCog(Avatar.Avatar):
         if self.healthCondition == 9 or self.healthCondition == 10:
             taskMgr.remove(self.uniqueName('blink-task'))
         self.healthCondition = 0
-        return
 
     def reverseHead(self):
         self.neck.setHpr(self.neckReversedHpr)
@@ -289,7 +290,6 @@ class BossCog(Avatar.Avatar):
         return self.__rollTreadsInterval(self.treadsRight, start=start, duration=duration, rate=rate)
 
     class DoorFSM(FSM.FSM):
-
         def __init__(self, name, animate, callback, openedHpr, closedHpr, uniqueName):
             FSM.FSM.__init__(self, name)
             self.animate = animate
@@ -317,7 +317,6 @@ class BossCog(Avatar.Avatar):
         def exitOpening(self):
             self.ival.pause()
             self.ival = None
-            return
 
         def filterOpened(self, request, args):
             if request == 'close':
@@ -385,6 +384,7 @@ class BossCog(Avatar.Avatar):
             self.accept(self.animDoneEvent, self.__getNextAnim)
         else:
             queueNeutral = 0
+
         ival, changed = self.__getAnimIval(anim, raised, forward, happy)
         if changed or queueNeutral:
             self.queuedAnimIvals.append((ival,
@@ -393,7 +393,6 @@ class BossCog(Avatar.Avatar):
              self.happy))
             if self.currentAnimIval == None:
                 self.__getNextAnim()
-        return
 
     def stopAnimate(self):
         self.ignore(self.animDoneEvent)
@@ -405,7 +404,6 @@ class BossCog(Avatar.Avatar):
         self.raised = self.nowRaised
         self.forward = self.nowForward
         self.happy = self.nowHappy
-        return
 
     def __getNextAnim(self):
         if self.queuedAnimIvals:
@@ -419,12 +417,12 @@ class BossCog(Avatar.Avatar):
         if self.currentAnimIval:
             self.currentAnimIval.setDoneEvent('')
             self.currentAnimIval.finish()
+
         self.currentAnimIval = ival
         self.currentAnimIval.start(playRate=self.ANIM_PLAYRATE)
         self.nowRaised = raised
         self.nowForward = forward
         self.nowHappy = happy
-        return
 
     def __getAnimIval(self, anim, raised, forward, happy):
         ival, changed = self.__doGetAnimIval(anim, raised, forward, happy)

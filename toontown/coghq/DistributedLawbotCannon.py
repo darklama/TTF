@@ -1,20 +1,22 @@
 from direct.interval.IntervalGlobal import *
 from direct.distributed.ClockDelta import *
+from direct.gui.DirectGui import *
+from pandac.PandaModules import *
 from direct.task.Task import Task
 from direct.distributed import DistributedObject
 from direct.directnotify import DirectNotifyGlobal
-from pandac.PandaModules import CollisionSphere, CollisionNode
+
 from toontown.toonbase import ToontownGlobals
 from toontown.estate import DistributedCannon
 from toontown.estate import CannonGlobals
 from toontown.nametag import NametagGlobals
-from direct.gui.DirectGui import *
-from pandac.PandaModules import *
 from toontown.toon import NPCToons
 from toontown.toon import ToonHead
 from toontown.toonbase import TTLocalizer
 from toontown.minigame import Trajectory
 from toontown.effects import DustCloud
+
+
 GROUND_PLANE_MIN = -15
 CANNON_ROTATION_MIN = -55
 CANNON_ROTATION_MAX = 50
@@ -26,6 +28,7 @@ INITIAL_VELOCITY = 80
 CANNON_MOVE_UPDATE_FREQ = 0.5
 CAMERA_PULLBACK_MIN = 20
 CAMERA_PULLBACK_MAX = 40
+
 
 class DistributedLawbotCannon(DistributedObject.DistributedObject):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedLawbotCannon')
@@ -395,7 +398,7 @@ class DistributedLawbotCannon(DistributedObject.DistributedObject):
 
     def __firePressed(self):
         self.notify.debug('fire pressed')
-        if not self.boss.state == 'BattleTwo':
+        if self.boss.state != 'BattleTwo':
             self.notify.debug('boss is in state=%s, not firing' % self.boss.state)
             return
         self.__broadcastLocalCannonPosition()
@@ -541,6 +544,7 @@ class DistributedLawbotCannon(DistributedObject.DistributedObject):
             self.toonHead.reparentTo(hidden)
             self.toonHead.stopBlink()
             self.toonHead.stopLookAroundNow()
+            self.toonHead.delete()
             self.toonHead = None
         if self.toonModel != None:
             self.toonModel.removeNode()
@@ -666,7 +670,7 @@ class DistributedLawbotCannon(DistributedObject.DistributedObject):
     def __fireCannonTask(self, task):
         launchTime = task.fireTime
         avId = task.avId
-        if self.toonHead == None or not self.boss.state == 'BattleTwo':
+        if self.toonHead is None or self.boss.state != 'BattleTwo':
             return Task.done
         startPos, startHpr, startVel, trajectory, timeOfImpact, hitWhat = self.__calcFlightResults(avId, launchTime)
 
@@ -751,7 +755,7 @@ class DistributedLawbotCannon(DistributedObject.DistributedObject):
             return (0.0, self.HIT_GROUND)
 
     def __handleCannonHit(self, collisionEntry):
-        if self.av == None or self.flyColNode == None:
+        if self.av is None or self.flyColNode is None:
             return
         interPt = collisionEntry.getSurfacePoint(render)
         hitNode = collisionEntry.getIntoNode().getName()

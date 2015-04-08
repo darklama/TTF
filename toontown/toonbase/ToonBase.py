@@ -3,15 +3,15 @@ from direct.directnotify import DirectNotifyGlobal
 from direct.filter.CommonFilters import CommonFilters
 from direct.gui import DirectGuiGlobals
 from direct.gui.DirectGui import *
+from direct.task import *
 from direct.showbase.PythonUtil import *
 from direct.showbase.Transitions import Transitions
-from direct.task import *
+from pandac.PandaModules import *
+
 import math
 import os
-from pandac.PandaModules import *
 import random
 import shutil
-from sys import platform
 import sys
 import tempfile
 import time
@@ -154,7 +154,7 @@ class ToonBase(OTPBase.OTPBase):
         self.accept(ToontownGlobals.ScreenshotHotkey, self.takeScreenShot)
 
         # OS X Specific Actions
-        if platform == "darwin":
+        if sys.platform == "darwin":
             self.acceptOnce(ToontownGlobals.QuitGameHotKeyOSX, self.exitOSX)
             self.accept(ToontownGlobals.QuitGameHotKeyRepeatOSX, self.exitOSX)
             self.acceptOnce(ToontownGlobals.HideGameHotKeyOSX, self.hideGame)
@@ -243,26 +243,24 @@ class ToonBase(OTPBase.OTPBase):
 
         # Free black/white Toons:
         self.wantYinYang = config.GetBool('want-yin-yang', False)
-        
         self.wantActiveBattleCamera = settings.get('ActiveBattleCamera', True)
-        
         self.wantWASD = settings.get('want-WASD', False)
-        
-        self.Move_Up = 'arrow_up'
-        self.Move_Left = 'arrow_left'       
-        self.Move_Down = 'arrow_down'
-        self.Move_Right = 'arrow_right'
-        self.JUMP = 'control'
-        
+
         if self.wantWASD:
             self.Move_Up = 'w'
-            self.Move_Left = 'a'            
+            self.Move_Left = 'a'
             self.Move_Down = 's'
             self.Move_Right = 'd'
             self.JUMP = 'shift'
-            
+        else:
+            self.Move_Up = 'arrow_up'
+            self.Move_Left = 'arrow_left'
+            self.Move_Down = 'arrow_down'
+            self.Move_Right = 'arrow_right'
+            self.JUMP = 'control'
+
         self.wantCogLevelGui = settings.get('want-Cog-Level-GUI', True)
-        
+
     def openMainWindow(self, *args, **kw):
         result = OTPBase.OTPBase.openMainWindow(self, *args, **kw)
         self.setCursorAndIcon()

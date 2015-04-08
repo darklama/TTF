@@ -9,7 +9,6 @@ from toontown.quest import MultiTrackChoiceGui
 from toontown.quest import QuestChoiceGui
 from toontown.quest import QuestParser
 from toontown.toonbase import TTLocalizer
-from toontown.toontowngui import TeaserPanel
 
 
 ChoiceTimeout = 20
@@ -22,9 +21,6 @@ class DistributedNPCToon(DistributedNPCToonBase):
         self.curQuestMovie = None
         self.questChoiceGui = None
         self.trackChoiceGui = None
-
-    def allowedToTalk(self):
-        return True
 
     def delayDelete(self):
         DistributedNPCToonBase.delayDelete(self)
@@ -85,13 +81,14 @@ class DistributedNPCToon(DistributedNPCToonBase):
 
     def setupCamera(self, mode):
         camera.wrtReparentTo(render)
-        if mode == NPCToons.QUEST_MOVIE_QUEST_CHOICE or mode == NPCToons.QUEST_MOVIE_TRACK_CHOICE:
+        if mode in [NPCToons.QUEST_MOVIE_QUEST_CHOICE, NPCToons.QUEST_MOVIE_TRACK_CHOICE]:
             camera.posQuatInterval(1, (5, 9, self.getHeight() - 0.5), (155, -2, 0), other=self, blendType='easeOut').start()
         else:
             camera.posQuatInterval(1, (-5, 9, self.getHeight() - 0.5), (-150, -2, 0), other=self, blendType='easeOut').start()
 
     def setMovie(self, mode, npcId, avId, quests, timestamp):
         isLocalToon = avId == base.localAvatar.doId
+
         if mode == NPCToons.QUEST_MOVIE_CLEAR:
             self.cleanupMovie()
             return
@@ -104,10 +101,12 @@ class DistributedNPCToon(DistributedNPCToonBase):
             self.startLookAround()
             self.detectAvatars()
             return
+
         av = base.cr.doId2do.get(avId)
         if av is None:
             self.notify.warning('Avatar %d not found in doId' % avId)
             return
+
         if mode == NPCToons.QUEST_MOVIE_REJECT:
             rejectString = Quests.chooseQuestDialogReject()
             rejectString = Quests.fillInQuestNames(rejectString, avName=av.name)
@@ -124,11 +123,14 @@ class DistributedNPCToon(DistributedNPCToonBase):
                 base.localAvatar.posCamera(0, 0)
                 base.cr.playGame.getPlace().setState('walk')
             return
+
         self.setupAvatars(av)
         fullString = ''
         toNpcId = None
+
         if isLocalToon:
             self.hideNametag2d()
+
         if mode == NPCToons.QUEST_MOVIE_COMPLETE:
             questId, rewardId, toNpcId = quests
             scriptId = 'quest_complete_' + str(questId)
@@ -137,7 +139,7 @@ class DistributedNPCToon(DistributedNPCToonBase):
                 self.curQuestMovie.play()
                 return
             if isLocalToon:
-                self.setupCamera(mode)     
+                self.setupCamera(mode)
             greetingString = Quests.chooseQuestDialog(questId, Quests.GREETING)
             if greetingString:
                 fullString += greetingString + '\x07'
@@ -195,9 +197,7 @@ class DistributedNPCToon(DistributedNPCToonBase):
             if isLocalToon:
                 self.acceptOnce('chooseQuest', self.sendChooseQuest)
                 self.questChoiceGui = QuestChoiceGui.QuestChoiceGui()
-                print 'setquestgui'
                 self.questChoiceGui.setQuests(quests, npcId, ChoiceTimeout)
-                print 'gui setQuests'
             return
         elif mode == NPCToons.QUEST_MOVIE_TRACK_CHOICE:
             if isLocalToon:
@@ -206,10 +206,9 @@ class DistributedNPCToon(DistributedNPCToonBase):
             self.setChatAbsolute(TTLocalizer.QuestMovieTrackChoice, CFSpeech)
             if isLocalToon:
                 self.acceptOnce('chooseTrack', self.sendChooseTrack)
-                print 'loading gui'
                 self.trackChoiceGui = MultiTrackChoiceGui.MultiTrackChoiceGui(tracks, ChoiceTimeout)
-                print 'loaded'
             return
+
         fullString = Quests.fillInQuestNames(fullString, avName=av.name, fromNpcId=npcId, toNpcId=toNpcId)
         self.acceptOnce(self.uniqueName('doneChatPage'), self.finishMovie, extraArgs=[av, isLocalToon])
         self.clearChat()

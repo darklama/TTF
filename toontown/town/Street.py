@@ -24,7 +24,6 @@ from toontown.nametag import NametagGlobals
 visualizeZones = base.config.GetBool('visualize-zones', 0)
 
 class Street(BattlePlace.BattlePlace):
-
     notify = DirectNotifyGlobal.directNotify.newCategory('Street')
 
     def __init__(self, loader, parentFSM, doneEvent):
@@ -95,6 +94,7 @@ class Street(BattlePlace.BattlePlace):
          State.State('fishing', self.enterFishing, self.exitFishing, ['walk']),
          State.State('purchase', self.enterPurchase, self.exitPurchase, ['walk']),
          State.State('final', self.enterFinal, self.exitFinal, ['start'])], 'start', 'final')
+
         self.parentFSM = parentFSM
         self.tunnelOriginList = []
         self.elevatorDoneEvent = 'elevatorDone'
@@ -107,8 +107,10 @@ class Street(BattlePlace.BattlePlace):
         self.fsm.enterInitialState()
         base.playMusic(self.loader.music, looping=1, volume=0.8)
         self.loader.geom.reparentTo(render)
+
         if visibilityFlag:
             self.visibilityOn()
+
         base.localAvatar.setGeom(self.loader.geom)
         base.localAvatar.setOnLevelGround(1)
         self._telemLimiter = TLGatherAllAvs('Street', RotationLimitToH)
@@ -120,10 +122,12 @@ class Street(BattlePlace.BattlePlace):
             self.halloweenLights = geom.findAllMatches('**/*light*')
             self.halloweenLights += geom.findAllMatches('**/*lamp*')
             self.halloweenLights += geom.findAllMatches('**/prop_snow_tree*')
+
             for light in self.halloweenLights:
                 light.setColorScaleOff(1)
 
         newsManager = base.cr.newsManager
+
         if newsManager:
             holidayIds = base.cr.newsManager.getDecorationHolidayId()
             if (ToontownGlobals.HALLOWEEN_COSTUMES in holidayIds or ToontownGlobals.SPOOKY_COSTUMES in holidayIds) and self.loader.hood.spookySkyFile:
@@ -137,17 +141,18 @@ class Street(BattlePlace.BattlePlace):
             self.loader.hood.startSky()
             lightsOn = LerpColorScaleInterval(base.cr.playGame.hood.loader.geom, 0.1, Vec4(1, 1, 1, 1))
             lightsOn.start()
+
         self.accept('doorDoneEvent', self.handleDoorDoneEvent)
         self.accept('DistributedDoor_doorTrigger', self.handleDoorTrigger)
         self.enterZone(requestStatus['zoneId'])
         self.tunnelOriginList = base.cr.hoodMgr.addLinkTunnelHooks(self, self.loader.nodeList, self.zoneId)
         self.fsm.request(requestStatus['how'], [requestStatus])
         self.replaceStreetSignTextures()
-        return
 
     def exit(self, visibilityFlag = 1):
         if visibilityFlag:
             self.visibilityOff()
+
         self.loader.geom.reparentTo(hidden)
         self._telemLimiter.destroy()
         del self._telemLimiter
@@ -175,7 +180,6 @@ class Street(BattlePlace.BattlePlace):
         cleanupDialog('globalDialog')
         self.ignoreAll()
         BattlePlace.BattlePlace.unload(self)
-        return
 
     def enterElevatorIn(self, requestStatus):
         self._eiwbTask = taskMgr.add(Functor(self._elevInWaitBldgTask, requestStatus['bldgDoId']), uniqueName('elevInWaitBldg'))
@@ -261,13 +265,11 @@ class Street(BattlePlace.BattlePlace):
                      'avId': avId}
                     self.fsm.request('final')
                     self.__teleportOutDone(requestStatus)
-        return
 
     def exitTeleportIn(self):
         self.removeSetZoneCompleteCallback(self._ttfToken)
         self._ttfToken = None
         BattlePlace.BattlePlace.exitTeleportIn(self)
-        return
 
     def enterTeleportOut(self, requestStatus):
         if 'battle' in requestStatus:
@@ -404,5 +406,3 @@ class Street(BattlePlace.BattlePlace):
                     sign.setTexture(signTexture, 1)
                 if inDreamland:
                     sign.setColorScale(0.525, 0.525, 0.525, 1)
-
-        return

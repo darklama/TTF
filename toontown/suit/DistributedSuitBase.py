@@ -1,14 +1,12 @@
-import copy
+from direct.interval.IntervalGlobal import *
+from direct.distributed.ClockDelta import *
+from pandac.PandaModules import *
 from direct.controls.ControlManager import CollisionHandlerRayStart
 from direct.directnotify import DirectNotifyGlobal
 from direct.directtools.DirectGeometry import CLAMP
-from direct.distributed.ClockDelta import *
 from direct.fsm import ClassicFSM
 from direct.fsm import State
-from direct.interval.IntervalGlobal import *
 from direct.task import Task
-import math
-from pandac.PandaModules import *
 
 import DistributedSuitPlanner
 import Suit
@@ -16,12 +14,12 @@ import SuitBase
 import SuitDNA
 import SuitDialog
 import SuitTimings
+
 from otp.avatar import DistributedAvatar
 from otp.otpbase import OTPGlobals
 from toontown.battle import BattleProps
 from toontown.battle import DistributedBattle
-from toontown.chat.ChatGlobals import *
-from toontown.nametag.NametagGlobals import *
+from toontown.chat.ChatGlobals import CFSpeech, CFTimeout
 from toontown.toonbase import TTLocalizer
 from toontown.toonbase import ToontownBattleGlobals
 from toontown.toonbase import ToontownGlobals
@@ -31,11 +29,10 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedSuitBase')
 
     def __init__(self, cr):
-        try:
-            self.DistributedSuitBase_initialized
+        if getattr(self, 'DistributedSuitBase_initialized', None) is not None:
             return
-        except:
-            self.DistributedSuitBase_initialized = 1
+
+        self.DistributedSuitBase_initialized = True
 
         DistributedAvatar.DistributedAvatar.__init__(self, cr)
         Suit.Suit.__init__(self)
@@ -57,12 +54,11 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
         self.propOutSound = None
         self.reparentTo(hidden)
         self.loop('neutral')
-        self.isASkelecog = 0        
+        self.isASkelecog = 0
         self.skeleRevives = 0
         self.maxSkeleRevives = 0
         self.sillySurgeText = False
         self.interactivePropTrackBonus = -1
-        return
 
     def setVirtual(self, virtual):
         pass
@@ -86,8 +82,7 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
              'dept': self.getStyleDept(),
              'level': self.getActualLevel()}
             self.setDisplayName(nameInfo)
-        return
-        
+
     def getIsSkelecog(self):
         return self.isASkelecog
 
@@ -101,7 +96,7 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
         DistributedAvatar.DistributedAvatar.generate(self)
 
     def disable(self):
-        self.notify.debug('DistributedSuit %d: disabling' % self.getDoId())
+        self.notify.debug('DistributedSuitBase %d: disabling' % self.getDoId())
         self.ignoreAll()
         self.__removeCollisionData()
         self.cleanupLoseActor()
@@ -110,16 +105,17 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
         DistributedAvatar.DistributedAvatar.disable(self)
 
     def delete(self):
-        try:
-            self.DistributedSuitBase_deleted
-        except:
-            self.DistributedSuitBase_deleted = 1
-            self.notify.debug('DistributedSuit %d: deleting' % self.getDoId())
-            del self.dna
-            del self.sp
-            DistributedAvatar.DistributedAvatar.delete(self)
-            Suit.Suit.delete(self)
-            SuitBase.SuitBase.delete(self)
+        if getattr(self, 'DistributedSuitBase_deleted', None) is not None:
+            return
+
+        self.DistributedSuitBase_deleted = True
+        self.notify.debug('DistributedSuitBase %d: deleting' % self.getDoId())
+        del self.dna
+        del self.sp
+
+        SuitBase.SuitBase.delete(self)
+        Suit.Suit.delete(self)
+        DistributedAvatar.DistributedAvatar.delete(self)
 
     def setDNAString(self, dnaString):
         Suit.Suit.setDNAString(self, dnaString)
@@ -129,7 +125,7 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
 
     def getHP(self):
         return self.currHP
-        
+
     def getMaxHP(self):
         return self.maxHP
 
@@ -177,7 +173,6 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
         else:
             head = self.find('**/joint_head')
         self.prop.reparentTo(head)
-        return
 
     def detachPropeller(self):
         if self.prop:
@@ -188,7 +183,6 @@ class DistributedSuitBase(DistributedAvatar.DistributedAvatar, Suit.Suit, SuitBa
             self.propInSound = None
         if self.propOutSound:
             self.propOutSound = None
-        return
 
     def beginSupaFlyMove(self, pos, moveIn, trackName, walkAfterLanding=True):
         skyPos = Point3(pos)

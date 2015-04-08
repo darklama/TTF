@@ -1,9 +1,14 @@
-from direct.actor import Actor
+from pandac.PandaModules import *
+from ToonHead import *
+
+from direct.actor.Actor import Actor
 from direct.directnotify import DirectNotifyGlobal
 from direct.interval.IntervalGlobal import *
+from direct.fsm.ClassicFSM import ClassicFSM
+from direct.fsm.State import State
 from direct.showbase.PythonUtil import Functor
 from direct.task.Task import Task
-from pandac.PandaModules import *
+
 import random
 import types
 
@@ -11,7 +16,7 @@ import AccessoryGlobals
 import Motion
 import TTEmote
 import ToonDNA
-from ToonHead import *
+
 from otp.avatar import Avatar
 from otp.avatar import Emote
 from otp.avatar.Avatar import teleportNotify
@@ -445,6 +450,7 @@ class Toon(Avatar.Avatar, ToonHead):
         self.setTag('pieCode', str(ToontownGlobals.PieCodeToon))
         self.setFont(ToontownGlobals.getToonFont())
         self.soundChatBubble = base.loadSfx('phase_3/audio/sfx/GUI_balloon_popup.ogg')
+
         self.animFSM = ClassicFSM('Toon', [State('off', self.enterOff, self.exitOff),
          State('neutral', self.enterNeutral, self.exitNeutral),
          State('victory', self.enterVictory, self.exitVictory),
@@ -488,7 +494,7 @@ class Toon(Avatar.Avatar, ToonHead):
          State('ScientistEmcee', self.enterScientistEmcee, self.exitScientistEmcee),
          State('ScientistWork', self.enterScientistWork, self.exitScientistWork),
          State('ScientistLessWork', self.enterScientistLessWork, self.exitScientistLessWork),
-         State('ScientistPlay', self.enterScientistPlay, self.enterScientistPlay)], 'off', 'off')
+         State('ScientistPlay', self.enterScientistPlay, self.exitScientistPlay)], 'off', 'off')
         animStateList = self.animFSM.getStates()
         self.animFSM.enterInitialState()
 
@@ -517,35 +523,35 @@ class Toon(Avatar.Avatar, ToonHead):
         return
 
     def delete(self):
-        try:
-            self.Toon_deleted
-        except:
-            self.Toon_deleted = 1
-            self.stopAnimations()
-            self.rightHands = None
-            self.rightHand = None
-            self.leftHands = None
-            self.leftHand = None
-            self.headParts = None
-            self.torsoParts = None
-            self.hipsParts = None
-            self.legsParts = None
-            del self.animFSM
-            for bookActor in self.__bookActors:
-                bookActor.cleanup()
+        if getattr(self, 'Toon_deleted', None) is not None:
+            return
 
-            del self.__bookActors
-            for holeActor in self.__holeActors:
-                holeActor.cleanup()
+        self.Toon_deleted = None
+        self.stopAnimations()
+        self.rightHands = None
+        self.rightHand = None
+        self.leftHands = None
+        self.leftHand = None
+        self.headParts = None
+        self.torsoParts = None
+        self.hipsParts = None
+        self.legsParts = None
 
-            del self.__holeActors
-            self.soundTeleport = None
-            self.motion.delete()
-            self.motion = None
-            Avatar.Avatar.delete(self)
-            ToonHead.delete(self)
+        del self.animFSM
 
-        return
+        for bookActor in self.__bookActors:
+            bookActor.cleanup()
+        del self.__bookActors
+
+        for holeActor in self.__holeActors:
+            holeActor.cleanup()
+        del self.__holeActors
+
+        self.soundTeleport = None
+        self.motion.delete()
+        self.motion = None
+        Avatar.Avatar.delete(self)
+        ToonHead.delete(self)
 
     def updateToonDNA(self, newDNA, fForce = 0):
         self.style.gender = newDNA.getGender()
@@ -663,7 +669,6 @@ class Toon(Avatar.Avatar, ToonHead):
         self.legsParts = self.findAllMatches('**/__Actor_legs')
         self.hipsParts = self.legsParts.findAllMatches('**/joint_hips')
         self.torsoParts = self.hipsParts.findAllMatches('**/__Actor_torso')
-        return
 
     def initializeBodyCollisions(self, collIdStr):
         Avatar.Avatar.initializeBodyCollisions(self, collIdStr)
@@ -673,9 +678,9 @@ class Toon(Avatar.Avatar, ToonHead):
     def getBookActors(self):
         if self.__bookActors:
             return self.__bookActors
-        bookActor = Actor.Actor('phase_3.5/models/props/book-mod', {'book': 'phase_3.5/models/props/book-chan'})
-        bookActor2 = Actor.Actor(other=bookActor)
-        bookActor3 = Actor.Actor(other=bookActor)
+        bookActor = Actor('phase_3.5/models/props/book-mod', {'book': 'phase_3.5/models/props/book-chan'})
+        bookActor2 = Actor(other=bookActor)
+        bookActor3 = Actor(other=bookActor)
         self.__bookActors = [bookActor, bookActor2, bookActor3]
         hands = self.getRightHands()
         for bookActor, hand in zip(self.__bookActors, hands):
@@ -687,9 +692,9 @@ class Toon(Avatar.Avatar, ToonHead):
     def getHoleActors(self):
         if self.__holeActors:
             return self.__holeActors
-        holeActor = Actor.Actor('phase_3.5/models/props/portal-mod', {'hole': 'phase_3.5/models/props/portal-chan'})
-        holeActor2 = Actor.Actor(other=holeActor)
-        holeActor3 = Actor.Actor(other=holeActor)
+        holeActor = Actor('phase_3.5/models/props/portal-mod', {'hole': 'phase_3.5/models/props/portal-chan'})
+        holeActor2 = Actor(other=holeActor)
+        holeActor3 = Actor(other=holeActor)
         self.__holeActors = [holeActor, holeActor2, holeActor3]
         for ha in self.__holeActors:
             if hasattr(self, 'uniqueName'):
@@ -727,6 +732,8 @@ class Toon(Avatar.Avatar, ToonHead):
                 height *= ToontownGlobals.SmallToonScale
             elif self.cheesyEffect == ToontownGlobals.CETinyToon:
                 height *= ToontownGlobals.TinyToonScale
+            elif self.cheesyEffect == ToontownGlobals.CEGiantToon:
+                return self.__doToonScale(ToontownGlobals.GiantToonScale, lerpTime)
             self.setHeight(height)
 
     def generateToonLegs(self, copy = 1):
@@ -818,7 +825,6 @@ class Toon(Avatar.Avatar, ToonHead):
 
     def swapToonHead(self, headStyle, copy = 1):
         self.stopLookAroundNow()
-        self.eyelids.request('open')
         self.unparentToonParts()
         self.removePart('head', '1000')
         self.removePart('head', '500')
@@ -832,7 +838,6 @@ class Toon(Avatar.Avatar, ToonHead):
         self.parentToonParts()
         self.rescaleToon()
         self.resetHeight()
-        self.eyelids.request('open')
         self.startLookAround()
 
     def generateToonColor(self):
@@ -2598,6 +2603,8 @@ class Toon(Avatar.Avatar, ToonHead):
             return self.__doToonScale(ToontownGlobals.SmallToonScale, lerpTime)
         elif effect == ToontownGlobals.CETinyToon:
             return self.__doToonScale(ToontownGlobals.TinyToonScale, lerpTime)
+        elif effect == ToontownGlobals.CEGiantToon:
+            return self.__doToonScale(ToontownGlobals.GiantToonScale, lerpTime)
         elif effect == ToontownGlobals.CEFlatPortrait:
             return self.__doToonScale(VBase3(1, 0.05, 1), lerpTime)
         elif effect == ToontownGlobals.CEFlatProfile:
@@ -2639,6 +2646,8 @@ class Toon(Avatar.Avatar, ToonHead):
         elif effect == ToontownGlobals.CESmallToon:
             return self.__doToonScale(None, lerpTime)
         elif effect == ToontownGlobals.CETinyToon:
+            return self.__doToonScale(None, lerpTime)
+        elif effect == ToontownGlobals.CEGiantToon:
             return self.__doToonScale(None, lerpTime)
         elif effect == ToontownGlobals.CEFlatPortrait:
             return self.__doToonScale(None, lerpTime)

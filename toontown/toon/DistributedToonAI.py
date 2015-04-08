@@ -6,6 +6,7 @@ from direct.distributed.MsgTypes import *
 from direct.distributed.PyDatagram import PyDatagram
 from direct.task import Task
 from pandac.PandaModules import *
+
 import random
 import time
 import re
@@ -4328,7 +4329,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
          hoodId,
          zoneId])
         self.air.send(dg)
-        
+
     def b_setFirstTrackPicked(self, trackId):
         self.setFirstTrackPicked(trackId)
         self.d_setFirstTrackPicked(trackId)
@@ -4338,16 +4339,12 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
 
     def setFirstTrackPicked(self, trackId):
         self.firstTrackPicked = trackId
-        
+
     def getFirstTrackPicked(self):
-        if hasattr(self, 'firstTrackPicked'):
-            return self.firstTrackPicked
-        return 0    
-        
+        return getattr(self, 'firstTrackPicked', 0)
+
     def getSecondTrackPicked(self):
-        if hasattr(self, 'secondTrackPicked'):
-            return self.secondTrackPicked
-        return 0
+        return getattr(self, 'secondTrackPicked', 0)
 
     def b_setSecondTrackPicked(self, trackId):
         self.setSecondTrackPicked(trackId)
@@ -4357,7 +4354,7 @@ class DistributedToonAI(DistributedPlayerAI.DistributedPlayerAI, DistributedSmoo
         self.sendUpdate('setSecondTrackPicked', [trackId])
 
     def setSecondTrackPicked(self, trackId):
-        self.secondTrackPicked = trackId        
+        self.secondTrackPicked = trackId
 
 @magicWord(category=CATEGORY_PROGRAMMER, types=[str, int, int])
 def cheesyEffect(value, hood=0, expire=0):
@@ -4368,15 +4365,23 @@ def cheesyEffect(value, hood=0, expire=0):
         value = int(value)
     except:
         value = value.lower()
+
     if isinstance(value, str):
         if value not in OTPGlobals.CEName2Id:
             return 'Invalid cheesy effect value: %s' % value
         value = OTPGlobals.CEName2Id[value]
-    elif not 0 <= value <= 17:
+    elif not 0 <= value <= 18:
         return 'Invalid cheesy effect value: %d' % value
-    if (hood != 0) and (not 1000 <= hood < ToontownGlobals.DynamicZonesBegin):
+
+    if (hood != 0) and not (1000 <= hood < ToontownGlobals.DynamicZonesBegin):
         return 'Invalid hood ID: %d' % hood
-    invoker = spellbook.getInvoker()
+
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
+
     invoker.b_setCheesyEffect(value, hood, expire)
     return 'Set your cheesy effect to: %d' % value
 
@@ -4385,7 +4390,12 @@ def hp(hp):
     """
     Modify the invoker's current HP.
     """
-    invoker = spellbook.getInvoker()
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
+
     maxHp = invoker.getMaxHp()
     if not -1 <= hp <= maxHp:
         return 'HP must be in range (-1-%d).' % maxHp
@@ -4399,7 +4409,13 @@ def maxHp(maxHp):
     """
     if not 15 <= maxHp <= ToontownGlobals.MaxHpLimit:
         return 'HP must be in range (15-%d).' % ToontownGlobals.MaxHpLimit
-    invoker = spellbook.getTarget()
+
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
+
     invoker.b_setHp(maxHp)
     invoker.b_setMaxHp(maxHp)
     invoker.toonUp(maxHp - invoker.getHp())
@@ -4410,7 +4426,11 @@ def allSummons():
     """
     Max the invoker's summons
     """
-    invoker = spellbook.getInvoker()
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
 
     numSuits = len(SuitDNA.suitHeadTypes)
     fullSetForSuit = 1 | 2 | 4
@@ -4423,7 +4443,11 @@ def maxToon(missingTrack=None, accessLevel=None):
     """
     Max the invoker's stats for end-level gameplay.
     """
-    invoker = spellbook.getTarget()
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
 
     # First, unlock the invoker's Gag tracks:
     gagTracks = [1, 1, 1, 1, 1, 1, 1]
@@ -4519,7 +4543,11 @@ def unlocks():
     """
     Unlocks the invoker's teleport access, emotions, and pet trick phrases.
     """
-    target = spellbook.getTarget()
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
 
     # First, unlock their teleport access:
     hoods = list(ToontownGlobals.HoodsForTeleportAll)
@@ -4549,7 +4577,12 @@ def sos(count, name):
     """
     Modifies the invoker's specified SOS card count.
     """
-    invoker = spellbook.getInvoker()
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
+
     if not 0 <= count <= 100:
         return 'Your SOS count must be in range (0-100).'
     for npcId, npcName in TTLocalizer.NPCToonNames.items():
@@ -4571,7 +4604,12 @@ def unites(value=32767):
     """
     Restock all resistance messages.
     """
-    invoker = spellbook.getInvoker()
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
+
     value = min(value, 32767)
     invoker.restockAllResistanceMessages(value)
     return 'Restocked %d unites!' % value
@@ -4581,7 +4619,12 @@ def fires(count):
     """
     Modifies the invoker's pink slip count.
     """
-    invoker = spellbook.getInvoker()
+    invokerAccess = spellbook.getInvokerAccess()
+    if invokerAccess > CATEGORY_PROGRAMMER:
+        invoker = spellbook.getTarget()
+    else:
+        invoker = spellbook.getInvoker()
+
     if not 0 <= count <= 255:
         return 'Your fire count must be in range (0-255).'
     invoker.b_setPinkSlips(count)
@@ -4604,8 +4647,9 @@ def bank(command, value):
     """
     Modifies the target's bank money values.
     """
-    command = command.lower()
     target = spellbook.getTarget()
+    command = command.lower()
+
     if command == 'transfer':
         if value == 0:
             return 'Invalid bank transfer.'
@@ -5308,7 +5352,7 @@ def online(avId):
     av = spellbook.getTarget()
     if len(str(avId)) >= 9:
         targetAvId = avId
-    else: 
+    else:
         targetAvId = 100000000+avId # To get target doId.
 
     simbase.air.getActivated(targetAvId, lambda x,y: av.d_setSystemMessage(0, '%d is %s!' % (x, 'online' if y else 'offline')))
@@ -5322,9 +5366,10 @@ def locate(avId=0, returnType=''):
     #    return "Please enter a valid avId to find! Note: You only need to enter the last few digits of the full avId!"
     if len(str(avId)) >= 9:
         targetAvId = avId
-    else: 
+    else:
         targetAvId = 100000000+avId # To get target doId.
-    av = simbase.air.doId2do.get(avIdFull, None)
+
+    av = simbase.air.doId2do.get(targetAvId, None)
     if not av:
         return "Could not find the avatar on the current AI."
 
@@ -5371,7 +5416,7 @@ def goto(avIdShort):
         return "Unable to teleport to target, they are not currently on this district."
     spellbook.getInvoker().magicWordTeleportRequests.append(avId)
     toon.sendUpdate('magicTeleportRequest', [spellbook.getInvoker().getDoId()])
-    
+
 @magicWord(category=CATEGORY_PROGRAMMER, types=[int, int, int, int, int, int, int])
 def invasion(suitDept, suitIndex=None, isSkelecog=0, isV2=0, isWaiter=0, isVirtual=0, isRental=0): 
         flags = [isSkelecog, isV2, isWaiter, isVirtual, isRental]

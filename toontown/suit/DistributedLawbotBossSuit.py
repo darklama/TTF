@@ -1,9 +1,11 @@
 from pandac.PandaModules import *
 from direct.interval.IntervalGlobal import *
-from direct.fsm import ClassicFSM, State
-from direct.fsm import State
+from direct.fsm.ClassicFSM import ClassicFSM
+from direct.fsm.State import State
 from direct.directnotify import DirectNotifyGlobal
+
 import DistributedSuitBase
+
 from toontown.toonbase import ToontownGlobals
 from toontown.battle import MovieUtil
 
@@ -14,69 +16,34 @@ class DistributedLawbotBossSuit(DistributedSuitBase.DistributedSuitBase):
     throwPaperEndTime = 4.33
 
     def __init__(self, cr):
-        self.flyingEvidenceTrack = None
-        try:
-            self.DistributedSuit_initialized
-        except:
-            self.DistributedSuit_initialized = 1
-            DistributedSuitBase.DistributedSuitBase.__init__(self, cr)
-            self.activeIntervals = {}
-            self.boss = None
-            self.fsm = ClassicFSM.ClassicFSM('DistributedLawbotBossSuit', [
-                State.State('Off',
-                            self.enterOff,
-                            self.exitOff, [
-                                'Walk',
-                                'Battle',
-                                'neutral']),
-                State.State('Walk',
-                            self.enterWalk,
-                            self.exitWalk, [
-                                'WaitForBattle',
-                                'Battle']),
-                State.State('Battle',
-                            self.enterBattle,
-                            self.exitBattle, []),
-                State.State('neutral',
-                            self.enterNeutral,
-                            self.exitNeutral, [
-                                'PreThrowProsecute',
-                                'PreThrowAttack',
-                                'Stunned']),
-                State.State('PreThrowProsecute',
-                            self.enterPreThrowProsecute,
-                            self.exitPreThrowProsecute,
-                            ['PostThrowProsecute',
-                             'neutral',
-                             'Stunned']),
-                State.State('PostThrowProsecute',
-                            self.enterPostThrowProsecute,
-                            self.exitPostThrowProsecute, [
-                                'neutral',
-                                'Stunned']),
-                State.State('PreThrowAttack',
-                            self.enterPreThrowAttack,
-                            self.exitPreThrowAttack, [
-                                'PostThrowAttack',
-                                'neutral',
-                                'Stunned']),
-                State.State('PostThrowAttack',
-                            self.enterPostThrowAttack,
-                            self.exitPostThrowAttack, [
-                                'neutral',
-                                'Stunned']),
-                State.State('Stunned',
-                            self.enterStunned,
-                            self.exitStunned, [
-                                'neutral']),
-                State.State('WaitForBattle',
-                            self.enterWaitForBattle,
-                            self.exitWaitForBattle, [
-                                'Battle'])],
-                'Off', 'Off')
-            self.fsm.enterInitialState()
+        if getattr(self, 'DistributedLawbotBossSuit_initialized', None) is not None:
+            return
 
-        return
+        self.DistributedLawbotBossSuit_initialized = True
+
+        DistributedSuitBase.DistributedSuitBase.__init__(self, cr)
+        self.flyingEvidenceTrack = None
+        self.activeIntervals = {}
+        self.boss = None
+        self.fsm = ClassicFSM('DistributedLawbotBossSuit', [
+            State('Off', self.enterOff, self.exitOff, [ 'Walk', 'Battle', 'neutral']),
+            State('Walk', self.enterWalk, self.exitWalk, [ 'WaitForBattle', 'Battle']),
+            State('Battle', self.enterBattle, self.exitBattle, []),
+            State('neutral', self.enterNeutral, self.exitNeutral,
+                 ['PreThrowProsecute', 'PreThrowAttack', 'Stunned']),
+            State('PreThrowProsecute', self.enterPreThrowProsecute, self.exitPreThrowProsecute,
+                 ['PostThrowProsecute', 'neutral', 'Stunned']),
+            State('PostThrowProsecute', self.enterPostThrowProsecute, self.exitPostThrowProsecute,
+                 ['neutral', 'Stunned']),
+            State('PreThrowAttack', self.enterPreThrowAttack, self.exitPreThrowAttack,
+                 ['PostThrowAttack', 'neutral', 'Stunned']),
+            State('PostThrowAttack', self.enterPostThrowAttack, self.exitPostThrowAttack,
+                 ['neutral', 'Stunned']),
+            State('Stunned', self.enterStunned, self.exitStunned, ['neutral']),
+            State('WaitForBattle', self.enterWaitForBattle, self.exitWaitForBattle, ['Battle'])],
+            'Off', 'Off')
+
+        self.fsm.enterInitialState()
 
     def generate(self):
         self.notify.debug('DLBS.generate:')
@@ -95,21 +62,20 @@ class DistributedLawbotBossSuit(DistributedSuitBase.DistributedSuitBase):
         self.setPickable(False)
 
     def disable(self):
-        self.notify.debug('DistributedSuit %d: disabling' % self.getDoId())
+        self.notify.debug('DistributedLawbotBossSuit %d: disabling' % self.getDoId())
         self.setState('Off')
         DistributedSuitBase.DistributedSuitBase.disable(self)
         self.cleanupIntervals()
         self.boss = None
-        return
 
     def delete(self):
-        try:
-            self.DistributedSuit_deleted
-        except:
-            self.DistributedSuit_deleted = 1
-            self.notify.debug('DistributedSuit %d: deleting' % self.getDoId())
-            del self.fsm
-            DistributedSuitBase.DistributedSuitBase.delete(self)
+        if getattr(self, 'DistributedLawbotBossSuit_deleted', None) is not None:
+            return
+
+        self.DistributedLawbotBossSuit_deleted = True
+        self.notify.debug('DistributedLawbotBossSuit %d: deleting' % self.getDoId())
+        del self.fsm
+        DistributedSuitBase.DistributedSuitBase.delete(self)
 
     def d_requestBattle(self, pos, hpr):
         self.cr.playGame.getPlace().setState('WaitForBattle')
@@ -145,7 +111,6 @@ class DistributedLawbotBossSuit(DistributedSuitBase.DistributedSuitBase):
         self.disableBattleDetect()
         self.tutWalkTrack.pause()
         self.tutWalkTrack = None
-        return
 
     def enterNeutral(self):
         self.notify.debug('enterNeutral')

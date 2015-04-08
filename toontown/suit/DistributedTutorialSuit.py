@@ -1,8 +1,10 @@
-import DistributedSuitBase
-from direct.directnotify import DirectNotifyGlobal
-from direct.fsm import ClassicFSM, State
-from direct.fsm import State
 from pandac.PandaModules import *
+
+import DistributedSuitBase
+
+from direct.directnotify import DirectNotifyGlobal
+from direct.fsm.ClassicFSM import ClassicFSM
+from direct.fsm.State import State
 from toontown.distributed.DelayDeletable import DelayDeletable
 
 
@@ -10,16 +12,20 @@ class DistributedTutorialSuit(DistributedSuitBase.DistributedSuitBase, DelayDele
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedTutorialSuit')
 
     def __init__(self, cr):
-        try:
-            self.DistributedSuit_initialized
-        except:
-            self.DistributedSuit_initialized = 1
-            DistributedSuitBase.DistributedSuitBase.__init__(self, cr)
-            self.fsm = ClassicFSM.ClassicFSM('DistributedSuit', [State.State('Off', self.enterOff, self.exitOff, ['Walk', 'Battle']),
-             State.State('Walk', self.enterWalk, self.exitWalk, ['WaitForBattle', 'Battle']),
-             State.State('Battle', self.enterBattle, self.exitBattle, []),
-             State.State('WaitForBattle', self.enterWaitForBattle, self.exitWaitForBattle, ['Battle'])], 'Off', 'Off')
-            self.fsm.enterInitialState()
+        if getattr(self, 'DistributedTutorialSuit_initialized', None) is not None:
+            return
+
+        DistributedSuitBase.DistributedSuitBase.__init__(self, cr)
+        self.DistributedTutorialSuit_initialized = True
+
+        self.fsm = ClassicFSM('DistributedTutorialSuit', [
+         State('Off', self.enterOff, self.exitOff, ['Walk', 'Battle']),
+         State('Walk', self.enterWalk, self.exitWalk, ['WaitForBattle', 'Battle']),
+         State('Battle', self.enterBattle, self.exitBattle, []),
+         State('WaitForBattle', self.enterWaitForBattle, self.exitWaitForBattle, ['Battle'])
+        ], 'Off', 'Off')
+
+        self.fsm.enterInitialState()
 
     def generate(self):
         DistributedSuitBase.DistributedSuitBase.generate(self)
@@ -29,18 +35,18 @@ class DistributedTutorialSuit(DistributedSuitBase.DistributedSuitBase, DelayDele
         self.setState('Walk')
 
     def disable(self):
-        self.notify.debug('DistributedSuit %d: disabling' % self.getDoId())
+        self.notify.debug('DistributedTutorialSuit %d: disabling' % self.getDoId())
         self.setState('Off')
         DistributedSuitBase.DistributedSuitBase.disable(self)
 
     def delete(self):
-        try:
-            self.DistributedSuit_deleted
-        except:
-            self.DistributedSuit_deleted = 1
-            self.notify.debug('DistributedSuit %d: deleting' % self.getDoId())
-            del self.fsm
-            DistributedSuitBase.DistributedSuitBase.delete(self)
+        if getattr(self, 'DistributedTutorialSuit_deleted', None) is not None:
+            return
+
+        self.DistributedTutorialSuit_deleted = True
+        self.notify.debug('DistributedTutorialSuit %d: deleting' % self.getDoId())
+        del self.fsm
+        DistributedSuitBase.DistributedSuitBase.delete(self)
 
     def d_requestBattle(self, pos, hpr):
         self.cr.playGame.getPlace().setState('WaitForBattle')

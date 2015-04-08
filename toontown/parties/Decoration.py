@@ -183,7 +183,7 @@ class Decoration(NodePath):
             self.decorationModel = loader.loadModel('phase_13/models/parties/tt_m_ara_pty_cogIceCreamVictory')
             self.decorationModel.reparentTo(self)
             self.decorationShadow = self.setupAnimSeq()
-        elif self.name == 'cogIceCreamWinter':
+        elif self.name == 'CogIceCreamWinter':
             self.decorationModel = loader.loadModel('phase_13/models/parties/tt_m_ara_pty_cogIceCreamWinter')
             self.decorationModel.reparentTo(self)
             self.decorationShadow = self.setupAnimSeq()
@@ -245,21 +245,25 @@ class Decoration(NodePath):
             del self.globeSphereNodePath
             del self.globeSphereNode
             del self.globeSphere
+            self.partyGlobe.cleanup()
             self.partyGlobe.removeNode()
             del self.partyGlobe
         elif self.name == 'Hydra' or self.name == 'StageWinter':
             self.cleanUpAnimSequences()
+            self.hydra.cleanup()
             self.hydra.removeNode()
             del self.hydra
             if hasattr(self, 'decSfx'):
                 del self.decSfx
         elif self.name == 'TubeCogVictory':
             self.cleanUpAnimSequences()
+            self.tubeCog.cleanup()
             self.tubeCog.removeNode()
             del self.tubeCog
             if hasattr(self, 'decSfx'):
                 del self.decSfx
         elif self.name == 'BannerJellyBean':
+            self.partyBanner.cleanup()
             self.partyBanner.removeNode()
         elif self.name == 'CakeTower':
             self.partyCake.removeNode()
@@ -268,13 +272,16 @@ class Decoration(NodePath):
             del self.globeSphereNodePath
             del self.globeSphereNode
             del self.globeSphere
+            self.flyingHeart.cleanup()
             self.flyingHeart.removeNode()
         elif self.name == 'HeartBanner':
+            self.heartBanner.cleanup()
             self.heartBanner.removeNode()
         elif self.name == 'CannonVictory':
+            self.cannonVictory.cleanup()
             self.cannonVictory.removeNode()
             del self.cannonVictory
-        elif self.name == 'CogIceCreamVictory' or self.name == 'CogStatueVictory' or self.name == 'cogIceCreamWinter' or self.name == 'CogStatueWinter':
+        elif self.name in ['CogIceCreamVictory', 'CogStatueVictory', 'CogIceCreamWinter', 'CogStatueWinter']:
             self.cleanUpAnimSequences()
             self.decorationModel.removeNode()
             self.decorationShadow.removeNode()
@@ -282,6 +289,7 @@ class Decoration(NodePath):
         elif self.name == 'snowman' or self.name == 'snowDoodle':
             self.decorationModel.removeNode()
         elif self.name == 'BannerVictory':
+            self.bannerVictory.cleanup()
             self.bannerVictory.removeNode()
             del self.bannerVictory
         elif self.name == 'CannonVictory':

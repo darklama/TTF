@@ -12,7 +12,7 @@ class RingAction(object):
 
 class RingActionStaticPos(RingAction):
     def __init__(self, pos):
-        super(self.__class__, self).__init__()
+        super(RingActionStaticPos, self).__init__()
         self.__pos = pos
 
     def __call__(self, t):
@@ -21,7 +21,7 @@ class RingActionStaticPos(RingAction):
 
 class RingActionFunction(RingAction):
     def __init__(self, func, *args):
-        super(self.__class__, self).__init__()
+        super(RingActionFunction, self).__init__()
         self.__func = func
         self.__args = args
 
@@ -30,7 +30,7 @@ class RingActionFunction(RingAction):
 
 class RingActionRingTrack(RingAction):
     def __init__(self, ringTrack):
-        super(self.__class__, self).__init__()
+        super(RingActionRingTrack, self).__init__()
         self.__track = ringTrack
 
     def __call__(self, t):

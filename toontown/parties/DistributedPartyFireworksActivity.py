@@ -35,7 +35,7 @@ class DistributedPartyFireworksActivity(DistributedPartyActivity, FireworkShowMi
     def setShowStyle(self, showStyle):
         DistributedPartyFireworksActivity.notify.debug('setShowStyle( %d )' % showStyle)
         self.showStyle = showStyle
-    
+
     def setSongId(self, songId):
         self.songId = songId
 
@@ -48,6 +48,7 @@ class DistributedPartyFireworksActivity(DistributedPartyActivity, FireworkShowMi
         self.launchPadModel.setPos(0.0, -18.0, 0.0)
         self.launchPadModel.reparentTo(self.root)
         railingsCollection = self.launchPadModel.findAllMatches('**/launchPad_mesh/*railing*')
+
         for i in xrange(railingsCollection.getNumPaths()):
             railingsCollection[i].setAttrib(AlphaTestAttrib.make(RenderAttrib.MGreater, 0.75))
 
@@ -67,14 +68,15 @@ class DistributedPartyFireworksActivity(DistributedPartyActivity, FireworkShowMi
         self.launchSound = base.loadSfx('phase_13/audio/sfx/rocket_launch.ogg')
         self.activityFSM = FireworksActivityFSM(self)
         self.activityFSM.request('Idle')
-        return
 
     def unload(self):
         DistributedPartyFireworksActivity.notify.debug('unload')
         taskMgr.remove(self.taskName('delayedStartShow'))
+
         if self.rocketParticleSeq:
             self.rocketParticleSeq.pause()
             self.rocketParticleSeq = None
+
         self.launchPadModel.removeNode()
         del self.launchPadModel
         del self.toonPullingLeverInterval
@@ -87,11 +89,11 @@ class DistributedPartyFireworksActivity(DistributedPartyActivity, FireworkShowMi
         del self.eventId
         del self.showStyle
         DistributedPartyActivity.unload(self)
-        return
 
     def _leverPulled(self, collEntry):
         DistributedPartyFireworksActivity.notify.debug('_leverPulled')
         hostPulledLever = DistributedPartyActivity._leverPulled(self, collEntry)
+
         if self.activityFSM.getCurrentOrNextState() == 'Active':
             self.showMessage(TTLocalizer.PartyFireworksAlreadyActive)
         elif self.activityFSM.getCurrentOrNextState() == 'Disabled':
@@ -109,6 +111,7 @@ class DistributedPartyFireworksActivity(DistributedPartyActivity, FireworkShowMi
     def setState(self, newState, timestamp):
         DistributedPartyFireworksActivity.notify.debug('setState( newState=%s, ... )' % newState)
         DistributedPartyActivity.setState(self, newState, timestamp)
+
         if newState == 'Active':
             self.activityFSM.request(newState, timestamp)
         else:
@@ -144,7 +147,6 @@ class DistributedPartyFireworksActivity(DistributedPartyActivity, FireworkShowMi
         messenger.send(FireworksFinishedEvent)
         taskMgr.remove(self.taskName('delayedStartShow'))
         FireworkShowMixin.disable(self)
-        return
 
     def startDisabled(self):
         DistributedPartyFireworksActivity.notify.debug('startDisabled')

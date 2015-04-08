@@ -18,15 +18,14 @@ class BattleSounds:
         return
 
     def setupSearchPath(self):
+        model_path = base.config.GetString('model-path', 'resources')
+        model_path = os.path.normpath( model_path )
+
         self.sfxSearchPath = DSearchPath()
-        self.sfxSearchPath.appendDirectory(Filename('../resources/phase_3/audio/sfx'))
-        self.sfxSearchPath.appendDirectory(Filename('../resources/phase_3.5/audio/sfx'))
-        self.sfxSearchPath.appendDirectory(Filename('../resources/phase_4/audio/sfx'))
-        self.sfxSearchPath.appendDirectory(Filename('../resources/phase_5/audio/sfx'))
-        self.sfxSearchPath.appendDirectory(Filename('/phase_3/audio/sfx'))
-        self.sfxSearchPath.appendDirectory(Filename('/phase_3.5/audio/sfx'))
-        self.sfxSearchPath.appendDirectory(Filename('/phase_4/audio/sfx'))
-        self.sfxSearchPath.appendDirectory(Filename('/phase_5/audio/sfx'))
+        self.sfxSearchPath.appendDirectory(Filename(model_path+'/phase_3/audio/sfx'))
+        self.sfxSearchPath.appendDirectory(Filename(model_path+'/phase_3.5/audio/sfx'))
+        self.sfxSearchPath.appendDirectory(Filename(model_path+'/phase_4/audio/sfx'))
+        self.sfxSearchPath.appendDirectory(Filename(model_path+'/phase_5/audio/sfx'))
 
     def clear(self):
         if self.isValid:

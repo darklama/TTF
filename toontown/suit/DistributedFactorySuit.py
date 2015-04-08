@@ -1,42 +1,46 @@
 from pandac.PandaModules import *
 from direct.interval.IntervalGlobal import *
-from direct.fsm import ClassicFSM, State
-from direct.fsm import State
+from direct.fsm.ClassicFSM import ClassicFSM
+from direct.fsm.State import State
 from direct.directnotify import DirectNotifyGlobal
-import DistributedSuitBase
 from direct.task.Task import Task
-import random
+
+import DistributedSuitBase
+
 from toontown.toonbase import ToontownGlobals
 from otp.level import LevelConstants
 from toontown.distributed.DelayDeletable import DelayDeletable
+
+import random
 
 class DistributedFactorySuit(DistributedSuitBase.DistributedSuitBase, DelayDeletable):
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedFactorySuit')
 
     def __init__(self, cr):
-        try:
-            self.DistributedSuit_initialized
-        except:
-            self.DistributedSuit_initialized = 1
-            DistributedSuitBase.DistributedSuitBase.__init__(self, cr)
-            self.fsm = ClassicFSM.ClassicFSM('DistributedSuit', [State.State('Off', self.enterOff, self.exitOff, ['Walk', 'Battle']),
-             State.State('Walk', self.enterWalk, self.exitWalk, ['WaitForBattle', 'Battle', 'Chase']),
-             State.State('Chase', self.enterChase, self.exitChase, ['WaitForBattle', 'Battle', 'Return']),
-             State.State('Return', self.enterReturn, self.exitReturn, ['WaitForBattle', 'Battle', 'Walk']),
-             State.State('Battle', self.enterBattle, self.exitBattle, ['Walk', 'Chase', 'Return']),
-             State.State('WaitForBattle', self.enterWaitForBattle, self.exitWaitForBattle, ['Battle'])], 'Off', 'Off')
-            self.path = None
-            self.walkTrack = None
-            self.chaseTrack = None
-            self.returnTrack = None
-            self.fsm.enterInitialState()
-            self.chasing = 0
-            self.paused = 0
-            self.pauseTime = 0
-            self.velocity = 3
-            self.factoryRequest = None
+        if getattr(self, 'DistributedFactorySuit_initialized', None) is not None:
+            return
 
-        return
+        self.DistributedFactorySuit_initialized = True
+
+        DistributedSuitBase.DistributedSuitBase.__init__(self, cr)
+        self.fsm = ClassicFSM('DistributedFactorySuit', [
+         State('Off', self.enterOff, self.exitOff, ['Walk', 'Battle']),
+         State('Walk', self.enterWalk, self.exitWalk, ['WaitForBattle', 'Battle', 'Chase']),
+         State('Chase', self.enterChase, self.exitChase, ['WaitForBattle', 'Battle', 'Return']),
+         State('Return', self.enterReturn, self.exitReturn, ['WaitForBattle', 'Battle', 'Walk']),
+         State('Battle', self.enterBattle, self.exitBattle, ['Walk', 'Chase', 'Return']),
+         State('WaitForBattle', self.enterWaitForBattle, self.exitWaitForBattle, ['Battle'])], 'Off', 'Off')
+
+        self.path = None
+        self.walkTrack = None
+        self.chaseTrack = None
+        self.returnTrack = None
+        self.fsm.enterInitialState()
+        self.chasing = 0
+        self.paused = 0
+        self.pauseTime = 0
+        self.velocity = 3
+        self.factoryRequest = None
 
     def generate(self):
         DistributedSuitBase.DistributedSuitBase.generate(self)
@@ -103,7 +107,6 @@ class DistributedFactorySuit(DistributedSuitBase.DistributedSuitBase, DelayDelet
                 spec = self.getCogSpec(self.cogId)
                 self.setCogSpec(spec)
                 self.factoryRequest = None
-                return
 
             self.factory.setEntityCreateCallback(LevelConstants.LevelMgrEntId, onFactoryReady)
 
@@ -115,25 +118,27 @@ class DistributedFactorySuit(DistributedSuitBase.DistributedSuitBase, DelayDelet
         if self.factoryRequest is not None:
             self.cr.relatedObjectMgr.abortRequest(self.factoryRequest)
             self.factoryRequest = None
-        self.notify.debug('DistributedSuit %d: disabling' % self.getDoId())
+
+        self.notify.debug('DistributedFactorySuit %d: disabling' % self.getDoId())
         self.setState('Off')
+
         if self.walkTrack:
             del self.walkTrack
             self.walkTrack = None
+
         DistributedSuitBase.DistributedSuitBase.disable(self)
         taskMgr.remove(self.taskName('returnTask'))
         taskMgr.remove(self.taskName('checkStray'))
         taskMgr.remove(self.taskName('chaseTask'))
-        return
 
     def delete(self):
-        try:
-            self.DistributedSuit_deleted
-        except:
-            self.DistributedSuit_deleted = 1
-            self.notify.debug('DistributedSuit %d: deleting' % self.getDoId())
-            del self.fsm
-            DistributedSuitBase.DistributedSuitBase.delete(self)
+        if getattr(self, 'DistributedFactorySuit_deleted', None) is not None:
+            return
+
+        self.DistributedFactorySuit_deleted = True
+        self.notify.debug('DistributedFactorySuit %d: deleting' % self.getDoId())
+        del self.fsm
+        DistributedSuitBase.DistributedSuitBase.delete(self)
 
     def d_requestBattle(self, pos, hpr):
         self.cr.playGame.getPlace().setState('WaitForBattle')

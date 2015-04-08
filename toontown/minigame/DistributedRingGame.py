@@ -1,8 +1,10 @@
 from toontown.toonbase.ToonBaseGlobal import *
+from toontown.toonbase import ToontownGlobals
 from direct.interval.IntervalGlobal import *
 from direct.distributed.ClockDelta import *
 from direct.fsm import ClassicFSM, State
-from toontown.toonbase import ToontownGlobals
+
+
 from .DistributedMinigame import DistributedMinigame
 
 import ArrowKeys

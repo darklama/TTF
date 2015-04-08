@@ -2,7 +2,8 @@ import FishGlobals
 from toontown.toonbase import TTLocalizer
 from direct.directnotify import DirectNotifyGlobal
 
-class FishBase:
+
+class FishBase(object):
     notify = DirectNotifyGlobal.directNotify.newCategory('FishBase')
 
     def __init__(self, genus, species, weight):
@@ -47,8 +48,7 @@ class FishBase:
         dict = FishGlobals.FishFileDict
         fileInfo = dict.get(self.genus, dict[-1])
         from direct.actor import Actor
-        actor = Actor.Actor(prefix + fileInfo[1], {'intro': prefix + fileInfo[2],
-         'swim': prefix + fileInfo[3]})
+        actor = Actor.Actor(prefix + fileInfo[1], {'intro': prefix + fileInfo[2], 'swim': prefix + fileInfo[3]})
         return actor
 
     def getSound(self):
@@ -56,19 +56,19 @@ class FishBase:
         loop = None
         delay = None
         playRate = None
+
         if base.config.GetBool('want-fish-audio', 1):
             soundDict = FishGlobals.FishAudioFileDict
             fileInfo = soundDict.get(self.genus, None)
+
             if fileInfo:
                 prefix = 'phase_%s/audio/sfx/' % self.getPhase()
                 sound = loader.loadSfx(prefix + soundDict[self.genus][0])
                 loop = soundDict[self.genus][1]
                 delay = soundDict[self.genus][2]
                 playRate = soundDict[self.genus][3]
-        return (sound,
-         loop,
-         delay,
-         playRate)
+
+        return (sound, loop, delay, playRate)
 
     def __str__(self):
         return '%s, weight: %s value: %s' % (self.getSpeciesName(), self.weight, self.getValue())

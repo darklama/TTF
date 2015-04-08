@@ -7,7 +7,7 @@ class RingTrack(RingAction.RingAction):
     notify = DirectNotifyGlobal.directNotify.newCategory('RingTrack')
 
     def __init__(self, actions, actionDurations = None, reverseFlag = 0):
-        super(self.__class__, self).__init__()
+        super(RingTrack, self).__init__()
 
         if actionDurations == None:
             actionDurations = [1.0 / float(len(actions))] * len(actions)

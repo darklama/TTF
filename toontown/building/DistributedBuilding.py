@@ -1,27 +1,31 @@
+from ElevatorConstants import *
+from ElevatorUtils import *
+from SuitBuildingGlobals import *
+
 from pandac.PandaModules import *
 from direct.distributed.ClockDelta import *
 from direct.interval.IntervalGlobal import *
 from direct.directtools.DirectGeometry import *
-from ElevatorConstants import *
-from ElevatorUtils import *
-from SuitBuildingGlobals import *
 from direct.gui.DirectGui import *
-from pandac.PandaModules import *
-from toontown.toonbase import ToontownGlobals
 from direct.directnotify import DirectNotifyGlobal
-from direct.fsm import ClassicFSM, State
+from direct.fsm.ClassicFSM import ClassicFSM
+from direct.fsm.State import State
 from direct.distributed import DistributedObject
-import random
+
+from toontown.toonbase import ToontownGlobals
 from toontown.suit import SuitDNA
 from toontown.toonbase import TTLocalizer
 from toontown.distributed import DelayDelete
 from toontown.toon import TTEmote
 from otp.avatar import Emote
 from toontown.hood import ZoneUtil
+
+
 FO_DICT = {'s': 'tt_m_ara_cbe_fieldOfficeMoverShaker',
  'l': 'tt_m_ara_cbe_fieldOfficeMoverShaker',
  'm': 'tt_m_ara_cbe_fieldOfficeMoverShaker',
  'c': 'tt_m_ara_cbe_fieldOfficeMoverShaker'}
+
 
 class DistributedBuilding(DistributedObject.DistributedObject):
     SUIT_INIT_HEIGHT = 125
@@ -32,7 +36,9 @@ class DistributedBuilding(DistributedObject.DistributedObject):
         self.interactiveProp = None
         self.suitDoorOrigin = None
         self.elevatorModel = None
-        self.fsm = ClassicFSM.ClassicFSM('DistributedBuilding', [State.State('off', self.enterOff, self.exitOff, ['waitForVictors',
+
+        self.fsm = ClassicFSM('DistributedBuilding', [
+         State('off', self.enterOff, self.exitOff, ['waitForVictors',
           'waitForVictorsFromCogdo',
           'becomingToon',
           'becomingToonFromCogdo',
@@ -44,26 +50,24 @@ class DistributedBuilding(DistributedObject.DistributedObject):
           'becomingCogdo',
           'becomingCogdoFromCogdo',
           'cogdo']),
-         State.State('waitForVictors', self.enterWaitForVictors, self.exitWaitForVictors, ['becomingToon']),
-         State.State('waitForVictorsFromCogdo', self.enterWaitForVictorsFromCogdo, self.exitWaitForVictorsFromCogdo, ['becomingToonFromCogdo', 'becomingCogdoFromCogdo']),
-         State.State('becomingToon', self.enterBecomingToon, self.exitBecomingToon, ['toon']),
-         State.State('becomingToonFromCogdo', self.enterBecomingToonFromCogdo, self.exitBecomingToonFromCogdo, ['toon']),
-         State.State('toon', self.enterToon, self.exitToon, ['clearOutToonInterior', 'clearOutToonInteriorForCogdo']),
-         State.State('clearOutToonInterior', self.enterClearOutToonInterior, self.exitClearOutToonInterior, ['becomingSuit']),
-         State.State('becomingSuit', self.enterBecomingSuit, self.exitBecomingSuit, ['suit']),
-         State.State('suit', self.enterSuit, self.exitSuit, ['waitForVictors', 'becomingToon']),
-         State.State('clearOutToonInteriorForCogdo', self.enterClearOutToonInteriorForCogdo, self.exitClearOutToonInteriorForCogdo, ['becomingCogdo']),
-         State.State('becomingCogdo', self.enterBecomingCogdo, self.exitBecomingCogdo, ['cogdo']),
-         State.State('becomingCogdoFromCogdo', self.enterBecomingCogdoFromCogdo, self.exitBecomingCogdoFromCogdo, ['cogdo']),
-         State.State('cogdo', self.enterCogdo, self.exitCogdo, ['waitForVictorsFromCogdo', 'becomingToonFromCogdo'])], 'off', 'off')
+         State('waitForVictors', self.enterWaitForVictors, self.exitWaitForVictors, ['becomingToon']),
+         State('waitForVictorsFromCogdo', self.enterWaitForVictorsFromCogdo, self.exitWaitForVictorsFromCogdo, ['becomingToonFromCogdo', 'becomingCogdoFromCogdo']),
+         State('becomingToon', self.enterBecomingToon, self.exitBecomingToon, ['toon']),
+         State('becomingToonFromCogdo', self.enterBecomingToonFromCogdo, self.exitBecomingToonFromCogdo, ['toon']),
+         State('toon', self.enterToon, self.exitToon, ['clearOutToonInterior', 'clearOutToonInteriorForCogdo']),
+         State('clearOutToonInterior', self.enterClearOutToonInterior, self.exitClearOutToonInterior, ['becomingSuit']),
+         State('becomingSuit', self.enterBecomingSuit, self.exitBecomingSuit, ['suit']),
+         State('suit', self.enterSuit, self.exitSuit, ['waitForVictors', 'becomingToon']),
+         State('clearOutToonInteriorForCogdo', self.enterClearOutToonInteriorForCogdo, self.exitClearOutToonInteriorForCogdo, ['becomingCogdo']),
+         State('becomingCogdo', self.enterBecomingCogdo, self.exitBecomingCogdo, ['cogdo']),
+         State('becomingCogdoFromCogdo', self.enterBecomingCogdoFromCogdo, self.exitBecomingCogdoFromCogdo, ['cogdo']),
+         State('cogdo', self.enterCogdo, self.exitCogdo, ['waitForVictorsFromCogdo', 'becomingToonFromCogdo'])], 'off', 'off')
+
         self.fsm.enterInitialState()
         self.bossLevel = 0
         self.transitionTrack = None
         self.elevatorNodePath = None
-        self.victorList = [0,
-         0,
-         0,
-         0]
+        self.victorList = [0, 0, 0, 0]
         self.waitingMessage = None
         self.cogDropSound = None
         self.cogLandSound = None
@@ -72,7 +76,6 @@ class DistributedBuilding(DistributedObject.DistributedObject):
         self.toonGrowSound = None
         self.toonSettleSound = None
         self.leftDoor = None
-        return
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
@@ -81,6 +84,7 @@ class DistributedBuilding(DistributedObject.DistributedObject):
 
     def disable(self):
         self.fsm.request('off')
+
         del self.townTopLevel
         self.stopTransition()
         DistributedObject.DistributedObject.disable(self)
@@ -88,16 +92,23 @@ class DistributedBuilding(DistributedObject.DistributedObject):
     def delete(self):
         if self.elevatorNodePath:
             self.elevatorNodePath.removeNode()
+
             del self.elevatorNodePath
             del self.elevatorModel
+
             if hasattr(self, 'cab'):
                 del self.cab
+
             del self.leftDoor
             del self.rightDoor
+
         del self.suitDoorOrigin
+
         self.cleanupSuitBuilding()
         self.unloadSfx()
+
         del self.fsm
+
         DistributedObject.DistributedObject.delete(self)
 
     def setBlock(self, block, interiorZoneId):
@@ -150,6 +161,7 @@ class DistributedBuilding(DistributedObject.DistributedObject):
     def enterWaitForVictors(self, ts):
         if self.mode != 'suit':
             self.setToSuit()
+
         victorCount = self.victorList.count(base.localAvatar.doId)
         if victorCount == 1:
             self.acceptOnce('insideVictorElevator', self.handleInsideVictorElevator)
@@ -157,6 +169,7 @@ class DistributedBuilding(DistributedObject.DistributedObject):
             camera.setPosHpr(self.elevatorNodePath, 0, -32.5, 9.4, 0, 348, 0)
             base.camLens.setMinFov(52.0/(4./3.))
             anyOthers = 0
+
             for v in self.victorList:
                 if v != 0 and v != base.localAvatar.doId:
                     anyOthers = 1
@@ -167,12 +180,11 @@ class DistributedBuilding(DistributedObject.DistributedObject):
             pass
         else:
             self.error('localToon is on the victorList %d times' % victorCount)
+
         closeDoors(self.leftDoor, self.rightDoor)
         for light in self.floorIndicator:
             if light != None:
                 light.setColor(LIGHT_OFF_COLOR)
-
-        return
 
     def handleInsideVictorElevator(self):
         self.notify.info('inside victor elevator')
@@ -188,6 +200,7 @@ class DistributedBuilding(DistributedObject.DistributedObject):
     def enterWaitForVictorsFromCogdo(self, ts):
         if self.mode != 'cogdo':
             self.setToCogdo()
+
         victorCount = self.victorList.count(base.localAvatar.doId)
         if victorCount == 1:
             self.acceptOnce('insideVictorElevator', self.handleInsideVictorElevatorFromCogdo)
@@ -195,6 +208,7 @@ class DistributedBuilding(DistributedObject.DistributedObject):
             camera.setPosHpr(self.elevatorNodePath, 0, -32.5, 9.4, 0, 348, 0)
             base.camLens.setMinFov(52.0/(4./3.))
             anyOthers = 0
+
             for v in self.victorList:
                 if v != 0 and v != base.localAvatar.doId:
                     anyOthers = 1
@@ -205,12 +219,11 @@ class DistributedBuilding(DistributedObject.DistributedObject):
             pass
         else:
             self.error('localToon is on the victorList %d times' % victorCount)
+
         closeDoors(self.leftDoor, self.rightDoor)
         for light in self.floorIndicator:
             if light != None:
                 light.setColor(LIGHT_OFF_COLOR)
-
-        return
 
     def handleInsideVictorElevatorFromCogdo(self):
         self.sendUpdate('setVictorReady', [])
@@ -220,7 +233,6 @@ class DistributedBuilding(DistributedObject.DistributedObject):
         if self.waitingMessage != None:
             self.waitingMessage.destroy()
             self.waitingMessage = None
-        return
 
     def enterBecomingToon(self, ts):
         self.animToToon(ts)
@@ -458,7 +470,6 @@ class DistributedBuilding(DistributedObject.DistributedObject):
         backgroundNP = loader.loadModel('phase_5/models/modules/suit_sign')
         backgroundNP.reparentTo(signOrigin)
         backgroundNP.setPosHprScale(0.0, 0.0, textHeight * 0.8 / zScale, 0.0, 0.0, 0.0, 8.0, 8.0, 8.0 * zScale)
-        backgroundNP.node().setEffect(DecalEffect.make())
         signTextNodePath = backgroundNP.attachNewNode(textNode.generate())
         signTextNodePath.setPosHprScale(0.0, 0.0, -0.21 + textHeight * 0.1 / zScale, 0.0, 0.0, 0.0, 0.1, 0.1, 0.1 / zScale)
         signTextNodePath.setColor(1.0, 1.0, 1.0, 1.0)

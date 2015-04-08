@@ -22,6 +22,8 @@ import DivingFishSpawn
 import DivingTreasure
 import TreasureScorePanel
 
+from .DistributedMinigame import DistributedMinigame
+
 import math
 
 
@@ -318,6 +320,7 @@ class DistributedDivingGame(DistributedMinigame):
         for crab in self.crabs:
             crab.moveLerp.finish()
             crab.moveLerp = None
+            crab.cleanup()
             crab.removeNode()
             del crab
 
@@ -341,7 +344,6 @@ class DistributedDivingGame(DistributedMinigame):
         self.cTrav = None
         self.cTrav2 = None
         base.localAvatar.collisionsOn()
-        return
 
     def handleDisabledAvatar(self, avId):
         self.dead = 1

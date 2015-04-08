@@ -1,35 +1,35 @@
-from pandac.PandaModules import *
-from direct.actor import Actor
 from otp.avatar import Avatar
 from toontown.toonbase import ToontownGlobals
 from pandac.PandaModules import *
 from toontown.toonbase import TTLocalizer
+
 import GoonGlobals
 import SuitDNA
 import math
-AnimDict = {'pg': (('walk', '-walk'), ('collapse', '-collapse'), ('recovery', '-recovery')),
+
+
+AnimDict = {
+ 'pg': (('walk', '-walk'), ('collapse', '-collapse'), ('recovery', '-recovery')),
  'sg': (('walk', '-walk'), ('collapse', '-collapse'), ('recovery', '-recovery'))}
-ModelDict = {'pg': 'phase_9/models/char/Cog_Goonie',
- 'sg': 'phase_9/models/char/Cog_Goonie'}
+ModelDict = {'pg': 'phase_9/models/char/Cog_Goonie', 'sg': 'phase_9/models/char/Cog_Goonie'}
+
 
 class Goon(Avatar.Avatar):
-
     def __init__(self, dnaName = None):
-        try:
-            self.Goon_initialized
-        except:
-            self.Goon_initialized = 1
-            Avatar.Avatar.__init__(self)
-            self.ignore('nametagAmbientLightChanged')
-            self.hFov = 70
-            self.attackRadius = 15
-            self.strength = 15
-            self.velocity = 4
-            self.scale = 1.0
-            if dnaName is not None:
-                self.initGoon(dnaName)
+        if getattr(self, 'Goon_initialized', None) is not None:
+            return
 
-        return
+        self.Goon_initialized = True
+        Avatar.Avatar.__init__(self)
+        self.ignore('nametagAmbientLightChanged')
+        self.hFov = 70
+        self.attackRadius = 15
+        self.strength = 15
+        self.velocity = 4
+        self.scale = 1.0
+
+        if dnaName is not None:
+            self.initGoon(dnaName)
 
     def initGoon(self, dnaName):
         dna = SuitDNA.SuitDNA()
@@ -46,18 +46,18 @@ class Goon(Avatar.Avatar):
             self.collNode.setCollideMask(self.collNode.getIntoCollideMask() | ToontownGlobals.PieBitmask)
 
     def delete(self):
-        try:
-            self.Goon_deleted
-        except:
-            self.Goon_deleted = 1
-            filePrefix = ModelDict[self.style.name]
-            loader.unloadModel(filePrefix + '-zero')
-            animList = AnimDict[self.style.name]
-            for anim in animList:
-                loader.unloadModel(filePrefix + anim[1])
+        if getattr(self, 'Goon_deleted', None) is not None:
+            return
 
-            Avatar.Avatar.delete(self)
+        self.Goon_deleted = True
+        filePrefix = ModelDict[self.style.name]
+        loader.unloadModel(filePrefix + '-zero')
 
+        animList = AnimDict[self.style.name]
+        for anim in animList:
+            loader.unloadModel(filePrefix + anim[1])
+
+        Avatar.Avatar.delete(self)
         return None
 
     def setDNAString(self, dnaString):
@@ -66,9 +66,7 @@ class Goon(Avatar.Avatar):
         self.setDNA(self.dna)
 
     def setDNA(self, dna):
-        if self.style:
-            pass
-        else:
+        if not hasattr(self, 'style') or not self.style:
             self.style = dna
             self.generateGoon()
             self.initializeDropShadow()
@@ -93,14 +91,17 @@ class Goon(Avatar.Avatar):
 
     def createHead(self):
         self.headHeight = 3.0
+
         head = self.find('**/joint35')
         if head.isEmpty():
             head = self.find('**/joint40')
+
         self.hat = self.find('**/joint8')
         parentNode = head.getParent()
         self.head = parentNode.attachNewNode('headRotate')
         head.reparentTo(self.head)
         self.hat.reparentTo(self.head)
+
         if self.type == 'pg':
             self.hat.find('**/security_hat').hide()
         elif self.type == 'sg':
@@ -108,15 +109,16 @@ class Goon(Avatar.Avatar):
         else:
             self.hat.find('**/security_hat').hide()
             self.hat.find('**/hard_hat').hide()
+
         self.eye = self.find('**/eye')
         self.eye.setColorScale(1, 1, 1, 1)
         self.eye.setColor(1, 1, 0, 1)
         self.radar = None
-        return
 
     def scaleRadar(self):
         if self.radar:
             self.radar.removeNode()
+
         self.radar = self.eye.attachNewNode('radar')
         model = loader.loadModel('phase_9/models/cogHQ/alphaCone2')
         beam = self.radar.attachNewNode('beam')
@@ -144,6 +146,7 @@ class Goon(Avatar.Avatar):
             colorList = GoonGlobals.SG_COLORS
         else:
             return
+
         if self.strength >= 20:
             self.hat.setColorScale(colorList[0])
         elif self.strength >= 15:

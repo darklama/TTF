@@ -1,7 +1,7 @@
 import TTStreet
 
-class TutorialStreet(TTStreet.TTStreet):
 
+class TutorialStreet(TTStreet.TTStreet):
     def enter(self, requestStatus):
         TTStreet.TTStreet.enter(self, requestStatus, visibilityFlag=0, arrowsOn=0)
 

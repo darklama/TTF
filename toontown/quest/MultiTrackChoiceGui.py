@@ -5,6 +5,7 @@ from toontown.toonbase import ToontownGlobals
 from toontown.toonbase import ToontownBattleGlobals
 from toontown.toonbase import TTLocalizer
 
+
 class TrackPoster(DirectFrame):
     normalTextColor = (0.3, 0.25, 0.2, 1)
 
@@ -22,10 +23,9 @@ class TrackPoster(DirectFrame):
             text_fg=self.normalTextColor, text_scale=0.05, text_align=TextNode.ACenter, text_wordwrap=8.0, textMayChange=0, geom=iconGeom, geom_scale=(0.8, 0.8, 0.8), pos=(0.0, 0, 0.05))
         bookModel.removeNode()
         guiButton = loader.loadModel('phase_3/models/gui/quit_button')
-        self.chooseButton = DirectButton(parent=self.poster, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')), 
+        self.chooseButton = DirectButton(parent=self.poster, relief=None, image=(guiButton.find('**/QuitBtn_UP'), guiButton.find('**/QuitBtn_DN'), guiButton.find('**/QuitBtn_RLVR')),
             image_scale=(0.7, 1, 1), text=TTLocalizer.TrackChoiceGuiChoose, text_scale=0.06, text_pos=(0, -0.02), command=callback, extraArgs=[trackId], pos=(0, 0, -0.20), scale=0.8)
         guiButton.removeNode()
-        return
 
 
 class MultiTrackChoiceGui(DirectFrame):
@@ -36,7 +36,7 @@ class MultiTrackChoiceGui(DirectFrame):
         (-0.5, 0, 0.1),
         (0, 0, 0.1),
         (0.5, 0, 0.1),
-        (0, 0, -0.3)    
+        (0, 0, -0.3)
     ]
 
     def __init__(self, tracks, timeout):
@@ -52,14 +52,13 @@ class MultiTrackChoiceGui(DirectFrame):
         self.timer.countdown(timeout, self.timeout)
         self.trackChoicePosters = []
         i = 0
+
         for trackId in tracks:
-            print 'at track '+str(trackId)
             tp = TrackPoster(trackId, self.chooseTrack)
             tp.reparentTo(self)
             self.trackChoicePosters.append(tp)
             tp.setPos(self.TrackPosterPos[i])
             i+=1
-        return
 
     def chooseTrack(self, trackId):
         self.timer.stop()

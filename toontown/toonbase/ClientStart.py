@@ -183,6 +183,4 @@ if autoRun:
     except SystemExit:
         raise
     except:
-        from direct.showbase import PythonUtil
-        print PythonUtil.describeException()
         raise
